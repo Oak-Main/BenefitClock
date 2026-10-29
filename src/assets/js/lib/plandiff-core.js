@@ -75,6 +75,15 @@ export function isSampleDataset(manifest) {
 }
 
 /**
+ * A benefit flag CMS did not publish in the file the site read.
+ * null/undefined means "not published", which is different from false
+ * ("CMS published it and it says no").
+ */
+function isUnpublished(v) {
+  return v === null || v === undefined;
+}
+
+/**
  * Build lookup indexes over a flat list of plan records for a single year.
  *
  * Two records sharing one `contract|plan|county` identity are not a thing CMS
@@ -413,7 +422,26 @@ export function buildDiff(args) {
     };
   }
 
-  const metrics = next ? METRICS.map((m) => diffMetric(m, prior, next, yearOpts)) : [];
+  /* A row whose value CMS did not publish on EITHER side is not a row a
+     reader can act on. When both years are unpublished for a benefit flag
+     (the combined Landscape file publishes no dental / vision / hearing
+     flags at all), the row is dropped rather than rendered as a row of
+     "not published" — three dead rows in every comparison is noise, and it
+     hides the rows that DO carry a real change. A ONE-SIDED null is kept:
+     that row still says something (one year published it, the other did
+     not), so it keeps the "Not published by CMS in this file" wording. */
+  const metrics = next
+    ? METRICS
+        .filter(
+          (m) =>
+            !(
+              m.kind === "bool" &&
+              isUnpublished(prior[m.field]) &&
+              isUnpublished(next[m.field])
+            )
+        )
+        .map((m) => diffMetric(m, prior, next, yearOpts))
+    : [];
 
   // Headline: premium movement is what people feel first.
   let headline = info.label;
