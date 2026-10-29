@@ -1,6 +1,6 @@
 <!--
 title: Medicare Part B Premium 2027: Early Projection vs. What's Official | BenefitDial
-description: The 2027 Medicare Part B premium isn't set yet — the 2026 Medicare Trustees Report projects about $209.50/month, up from $202.90 in 2026. Here's what's official, what's estimate, and how hold-harmless protects most people.
+description: The 2027 Medicare Part B premium isn't set yet — the 2026 Medicare Trustees Report projects about $209.50/month, up from ${{PART_B_PREMIUM}} in 2026. Here's what's official, what's estimate, and how hold-harmless protects most people.
 slug: guides/medicare-premiums-2027
 nav: guides
 ogtype: article
@@ -15,7 +15,7 @@ changefreq: monthly
     <p class="eyebrow">Guide · Medicare costs</p>
     <h1>Medicare Part B premium in 2027: the early projection vs. what's official</h1>
     <p class="lead prose">The government sets the standard Part B premium each fall, and the number lands in the same season as your Social Security raise — which is exactly why it matters. Here's what's actually official for 2027 (nothing yet), what the projections say, and the rule that protects most people from the increase.</p>
-    <p class="prose"><span class="badge badge--info">2027 projection: about $209.50/month</span> <span class="muted">2026 official premium: $202.90. The 2027 figure arrives in the CMS fall announcement.</span></p>
+    <p class="prose"><span class="badge badge--info">2027 projection: about $209.50/month</span> <span class="muted">2026 official premium: ${{PART_B_PREMIUM}}. The 2027 figure arrives in the CMS fall announcement.</span></p>
   </div>
 </section>
 
@@ -74,7 +74,7 @@ changefreq: monthly
       <details class="faq">
         <summary>How much will the Medicare Part B premium be in 2027?</summary>
         <div class="faq__body">
-          <p>Not officially set yet. The 2026 Medicare Trustees Report projects roughly $209.50 per month, up from $202.90 in 2026. CMS announces the official amount in fall 2026, and it takes effect January 2027.</p>
+          <p>Not officially set yet. The 2026 Medicare Trustees Report projects roughly $209.50 per month, up from ${{PART_B_PREMIUM}} in 2026. CMS announces the official amount in fall 2026, and it takes effect January 2027.</p>
         </div>
       </details>
       <details class="faq">
@@ -115,7 +115,7 @@ changefreq: monthly
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": "Medicare Part B premium in 2027: the early projection vs. what's official",
-  "description": "The 2027 Medicare Part B premium isn't set yet — the Trustees Report projects about $209.50/month, up from $202.90 in 2026. What's official, what's estimate, and how hold-harmless protects most people.",
+  "description": "The 2027 Medicare Part B premium isn't set yet — the Trustees Report projects about $209.50/month, up from ${{PART_B_PREMIUM}} in 2026. What's official, what's estimate, and how hold-harmless protects most people.",
   "articleSection": "Medicare costs",
   "inLanguage": "en-US",
   "isAccessibleForFree": true,
@@ -135,7 +135,7 @@ changefreq: monthly
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    { "@type": "Question", "name": "How much will the Medicare Part B premium be in 2027?", "acceptedAnswer": { "@type": "Answer", "text": "Not officially set yet. The 2026 Medicare Trustees Report projects roughly $209.50 per month, up from $202.90 in 2026. CMS announces the official amount in fall 2026, effective January 2027." } },
+    { "@type": "Question", "name": "How much will the Medicare Part B premium be in 2027?", "acceptedAnswer": { "@type": "Answer", "text": "Not officially set yet. The 2026 Medicare Trustees Report projects roughly $209.50 per month, up from ${{PART_B_PREMIUM}} in 2026. CMS announces the official amount in fall 2026, effective January 2027." } },
     { "@type": "Question", "name": "Can my Social Security check go down because Part B went up?", "acceptedAnswer": { "@type": "Answer", "text": "Not if you're protected by hold-harmless — the rule caps the Part B increase so your net check never falls below the prior year's. New Medicare enrollees, people billed directly, and those paying IRMAA surcharges aren't covered." } },
     { "@type": "Question", "name": "When is the 2027 premium announced?", "acceptedAnswer": { "@type": "Answer", "text": "Typically mid-to-late fall 2026, in the CMS premium announcement accompanying the physician fee schedule final rule. {{#projected}}The COLA becomes official slightly earlier.{{/projected}}{{#official}}The COLA became official on {{CYCLE_ANNOUNCE_DATE_LONG}}.{{/official}}" } },
     { "@type": "Question", "name": "Why does the premium rise almost every year?", "acceptedAnswer": { "@type": "Answer", "text": "Part B premiums are set to fund about 25% of projected Part B spending. As program costs grow, the standard premium follows." } }
