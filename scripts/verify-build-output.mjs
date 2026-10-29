@@ -149,6 +149,30 @@ console.log("\nSample-data disclosure");
   const partFlags = Object.values(parts).map((p) => (p && typeof p === "object" ? p.sample : p));
   const anySample = partFlags.some((f) => f === true) || (partFlags.length ? false : manifest.sample !== false);
 
+  /* The three phrases that tell a reader the tool runs on made-up data. They
+     live in the {{#sample}} branch of three different pages, and the build
+     keeps that branch only while the dataset is sample. Each one is a
+     sentence a reader would take as a fact about the tool, so each one has
+     to appear in EVERY sample build and in NO real build. */
+  const STALE_WHEN_REAL = [
+    "sample plans",
+    "structurally identical sample dataset",
+    "Why don't I see",
+  ];
+
+  /* Every built page, not just the tool page: the open-enrollment hub and
+     the how-it-works page carry two of the three. */
+  const allPages = [];
+  const walk = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name.endsWith(".html")) allPages.push(p);
+    }
+  };
+  walk(DIST);
+  const corpus = allPages.map((f) => ({ file: f, text: read(f) }));
+
   if (anySample) {
     /* The banner must ship VISIBLE and be hidden only by script, so that a JS
        failure degrades toward honesty. A `hidden` attribute in the built markup
@@ -168,6 +192,16 @@ console.log("\nSample-data disclosure");
     page.toLowerCase().includes("sample")
       ? ok("the word \"sample\" is present in the built page text")
       : bad('the dataset is sample but the page never says "sample"');
+
+    /* The sample state must say all three things it is supposed to say. A
+       missing one is a reader told the data is made up in one place and
+       real in another. */
+    for (const phrase of STALE_WHEN_REAL) {
+      const hits = corpus.filter((c) => c.text.includes(phrase));
+      hits.length
+        ? ok(`"${phrase}" is present in the built pages (${hits.map((h) => h.file.replace(DIST, "dist")).join(", ")})`)
+        : bad(`the dataset is sample but "${phrase}" appears in NO built page — the sample disclosure is missing`);
+    }
   } else {
     /* Real data: the disclosure must be GONE, not merely hidden. A banner
        that survives in the markup says the opposite of the truth about every
@@ -187,6 +221,15 @@ console.log("\nSample-data disclosure");
     /Source: CMS Landscape &amp; Crosswalk files/.test(page)
       ? ok("the page names the CMS Landscape & Crosswalk files as the source")
       : bad("the built page does not name the CMS source files");
+
+    /* And none of the three sentences that claim the tool runs on made-up
+       data may survive anywhere in the built site. */
+    for (const phrase of STALE_WHEN_REAL) {
+      const hits = corpus.filter((c) => c.text.includes(phrase));
+      hits.length
+        ? bad(`"${phrase}" is still in ${hits.map((h) => h.file.replace(DIST, "dist")).join(", ")} although every part of the dataset is real`)
+        : ok(`"${phrase}" is absent from every built page`);
+    }
   }
 }
 
