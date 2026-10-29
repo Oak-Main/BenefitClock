@@ -1,0 +1,15 @@
+{
+  "part": "next",
+  "planYear": 2027,
+  "sample": false,
+  "sourcePage": "https://www.cms.gov/medicare/coverage/prescription-drug-coverage",
+  "releaseLabel": "CY2027 Landscape (202610) (ZIP)",
+  "fileName": "cy2027-landscape-202610.zip",
+  "downloadDate": "2026-10-29",
+  "zipSha256": "7681605e98b518e3e5c93b9a9424cc148451a60fdcf0f3273c409b85570e40db",
+  "sourceCsvSha256": "b1c8f33deb7a37c44eea003a49f24669ff2e11b73332d69f95225bc5ccbd8227",
+  "normalizedFile": "src/data/landscape-next.csv",
+  "normalizedSha256": "f9bdabc346f21accadfa7f1fbaacfb9d3f4196e7fc0e9f25e716572b6ee5af93",
+  "rows": 2137,
+  "notes": "Normalized from the official CMS CY2027 Medicare Advantage / Part D Landscape Source File, scoped to the 2137 plan rows serving this site's counties. Dental / vision / hearing benefit flags are not published in the combined Landscape file and are emitted empty."
+}
