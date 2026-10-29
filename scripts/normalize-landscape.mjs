@@ -39,6 +39,7 @@ import { createInterface } from 'node:readline';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeProvenance, fileSha256 } from './lib/provenance.mjs';
+import { money, selectPremium, stars } from './lib/landscape-money.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -118,25 +119,8 @@ const csv = (v) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
 
 /* A CMS money cell: "$1,234.50", "0.00", "Not Applicable", "($52.20)".
    Returns a plain number string, or "" when the cell is not a number —
-   which is the difference between "unknown" and "zero". */
-function money(v) {
-  const s = String(v == null ? '' : v).trim();
-  if (!s) return '';
-  const neg = /^\(.*\)$/.test(s);
-  const cleaned = s.replace(/^\(|\)$/g, '').replace(/[$,\s]/g, '');
-  if (!/^-?\d+(\.\d+)?$/.test(cleaned)) return '';
-  const n = Number(cleaned);
-  if (!Number.isFinite(n)) return '';
-  return String(neg ? -n : n);
-}
-
-/* A CMS star rating: 4.5, or "Plan Too New To Be Measured" /
-   "Not Enough Data Available". Anything that is not a number is "not rated". */
-function stars(v) {
-  const s = String(v == null ? '' : v).trim();
-  if (!s || !/^\d+(\.\d+)?$/.test(s)) return '';
-  return s;
-}
+   which is the difference between "unknown" and "zero". See
+   scripts/lib/landscape-money.mjs, which owns the rule and its tests. */
 
 const rl = createInterface({ input: createReadStream(SRC, 'utf8') });
 let header = null;
@@ -177,11 +161,17 @@ for await (const line of rl) {
     planType,
     pick('Plan Type'),
     pick('Plan Name'),
-    /* Part C premium is the monthly premium a beneficiary actually pays for
-       the medical benefit, and CMS fills it in on every row. The consolidated
-       Part C+D premium is "Not Applicable" on a plan with no Part D at all,
-       so it can only ever be a fallback. */
-    money(pick('Part C Premium')) || money(pick('Monthly Consolidated Premium (Part C + D)')),
+    /* The premium a member actually pays: the consolidated Part C+D figure
+       whenever CMS publishes a number there, and the Part C premium only
+       where the consolidated column is "Not Applicable" (a plan with no
+       Part D at all). A MAPD's Part C premium is very often $0.00 because
+       the Part C premium is waived, so reading Part C first would show a
+       $0 premium for a plan that really costs the Part D premium.
+       selectPremium() chooses on PARSABILITY, never on truthiness. */
+    selectPremium(
+      pick('Monthly Consolidated Premium (Part C + D)'),
+      pick('Part C Premium')
+    ),
     money(pick('Annual Part D Deductible Amount')),
     money(pick('In-Network Maximum Out-of-Pocket (MOOP) Amount')),
     stars(pick('Overall Star Rating')) || stars(pick('Part C Summary Star Rating')),

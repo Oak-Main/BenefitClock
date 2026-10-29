@@ -65,7 +65,7 @@ node scripts/normalize-landscape.mjs --year 2027 \
 | `plan_type` | derived | `PDP` if `National PDP` = Yes; `MAPD` if `Part D Coverage Indicator` = Yes; otherwise `MA` |
 | `network` | `Plan Type` | `HMO`, `HMO-POS`, `PPO`, `Regional PPO`, `PFFS`, SNP variants |
 | `plan_name` | `Plan Name` | verbatim |
-| `premium` | `Part C Premium` | fallback `Monthly Consolidated Premium (Part C + D)` |
+| `premium` | `Monthly Consolidated Premium (Part C + D)` | fallback `Part C Premium` — see "Which premium?" below |
 | `drug_deductible` | `Annual Part D Deductible Amount` | empty when CMS writes `Not Applicable` |
 | `moop` | `In-Network Maximum Out-of-Pocket (MOOP) Amount` | verbatim |
 | `star_rating` | `Overall Star Rating` | fallback `Part C Summary Star Rating`; empty when CMS writes `Plan Too New To Be Measured` / `Not Enough Data Available` |
@@ -89,6 +89,45 @@ node scripts/normalize-landscape.mjs --year 2027 \
    Medicare Advantage plans only. Recorded in `OWNER_STEPS.md` as a known
    scope limitation, not silently dropped.
 
+### Which premium?
+
+Two columns carry a monthly premium, and picking the wrong one is a real
+error rather than a rounding difference:
+
+- **`Monthly Consolidated Premium (Part C + D)`** is what a member actually
+  pays for a plan with drug coverage: the medical premium plus the drug
+  premium.
+- **`Part C Premium`** is the medical benefit alone. CMS very often writes
+  `$0.00` here for a MAPD, because the Part C premium is waived and the
+  member pays the drug premium instead.
+
+So the consolidated column wins **whenever it parses as a number**, and
+`Part C Premium` is used only where the consolidated column reads
+`Not Applicable` — which is exactly the set of plans with no Part D at all
+(209 of the 2,137 CY2027 scoped rows, 237 of the 2,288 CY2026 rows).
+
+The choice is made on **parsability, not truthiness**. `money()` returns the
+string `"0"` for a `$0.00` cell, and `"0"` is truthy in JavaScript, so a `||`
+chain over these two columns silently prefers a `$0` Part C premium over a
+real consolidated one. `selectPremium()` in `scripts/lib/landscape-money.mjs`
+does the check explicitly, and `tests/landscape-money.test.mjs` covers it.
+
+**What this changed** (scoped rows, from the same archives with the same
+SHA-256):
+
+| | CY2026 | CY2027 |
+|---|---|---|
+| rows where the two columns differ | 876 | 501 |
+| largest single-row difference | $190.00 | $212.60 |
+| $0 premiums **before** the fix | 2,127 | **1,947** |
+| $0 premiums **after** the fix | 1,382 | **1,585** |
+| rows where neither column parses | 0 | 0 |
+
+The largest CY2027 difference is `Independent Health's Encompass 65 RED 045
+(HMO)`: a $286.00 consolidated premium against a $73.40 Part C premium. The
+CY2026 worst case is `Independent Health's Encompass 65 RED 043 (HMO)`, $190.00
+consolidated against a $0.00 Part C premium.
+
 ### Numeric cells that are not numbers
 
 CMS writes text into money and rating cells. These must land as *empty*
@@ -101,9 +140,9 @@ dash) and never as `0` (which reads as a genuinely free plan):
 - `Plan Too New To Be Measured` / `Not Enough Data Available` — star ratings
   for plans with no rating history (182 of the 2,137 CY2027 scoped rows).
 
-This is why the premium comes from `Part C Premium` and not from
-`Monthly Consolidated Premium (Part C + D)`: the consolidated column is
-`Not Applicable` on every plan without Part D.
+This is why the premium comes from `Monthly Consolidated Premium (Part C + D)`
+whenever CMS publishes a number in it, falling back to `Part C Premium` only
+where the consolidated column is `Not Applicable`.
 
 ---
 

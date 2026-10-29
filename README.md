@@ -132,12 +132,35 @@ the JSON they produce is generated and gitignored.
   friends rather than borrowing the COLA or Medicare-figures year — those roll at
   different moments, and borrowing one used to roll a page title while its body
   stayed pinned to the old season.
-- **Medicare plans:** drop the real CMS CSVs into `src/data/` as
-  `landscape-current.csv`, `landscape-next.csv`, and `crosswalk.csv`, then rebuild.
-  `scripts/build-plan-data.mjs` ingests them automatically. **Until those files are
-  published, the plan tool runs on a deterministic, structurally-faithful _sample_
-  dataset** (`manifest.sample = true`) so the tool is fully demonstrable — every sample
-  plan is flagged `sample: true`.
+- **Medicare plans — `src/data/landscape-current.csv`, `landscape-next.csv`,
+  `crosswalk.csv`.** These are **generated from the official CMS archives**
+  by the two normalizers, and the generated files *plus a provenance sidecar
+  each* are committed:
+
+  ```
+  node scripts/normalize-landscape.mjs --year 2027 --src <extracted csv> \
+    --out landscape-next.csv --zip <zip> --file-name <name> \
+    --release-label "<label>" --download-date <YYYY-MM-DD>
+  node scripts/normalize-crosswalk.mjs --year 2027 --src <extracted .txt> \
+    --out crosswalk.csv --zip <zip> --file-name <name> \
+    --release-label "<label>" --download-date <YYYY-MM-DD>
+  ```
+
+  The raw archives are **not** committed (`raw-cms/` and `*.zip` are
+  gitignored) — only the county-scoped output is. Every source URL, release
+  label, download date and SHA-256 is recorded in `docs/CMS-2027-SOURCES.md`
+  and in the per-file `*.provenance.json` sidecar, and `manifest.json`
+  quotes it under `parts`. **A data file with no sidecar fails the build**:
+  a number nobody can trace does not ship.
+
+  `scripts/build-plan-data.mjs` ingests the three files independently. The
+  dataset is sample if **any** part is sample (`manifest.sample`), and the
+  sample banner on `/medicare-plan-changes/` shows if and only if that is
+  true — decided at build time, so the shipped HTML is right before any
+  script runs. **If a part is missing**, that part alone falls back to the
+  deterministic, structurally-faithful sample dataset (every generated plan
+  is flagged `sample: true` and every generated carrier name starts with
+  "Sample"), and the banner comes back.
 
 ## Deploying to Cloudflare Pages
 

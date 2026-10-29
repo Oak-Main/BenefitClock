@@ -9,7 +9,7 @@
   "zipSha256": "75f2797b510449fc0d376bbbbeb3c129f6091a697555281559ca28e6e4b8d882",
   "sourceCsvSha256": "0e530c2352f9481b25ed7ed995d4a1703bfe7547691aebc22dfaf6fcb757277a",
   "normalizedFile": "src/data/landscape-current.csv",
-  "normalizedSha256": "70b88b429e365fc4fb39a48dc8d59043c415c9a4ce97051b6609d2ffa894c023",
+  "normalizedSha256": "efcbd11b574ff5c32eb1dc65827074fdb05d39e73ae6cfee01314524eb00cd9c",
   "rows": 2288,
   "notes": "Normalized from the official CMS CY2026 Medicare Advantage / Part D Landscape Source File, scoped to the 2288 plan rows serving this site's counties. Dental / vision / hearing benefit flags are not published in the combined Landscape file and are emitted empty."
 }
