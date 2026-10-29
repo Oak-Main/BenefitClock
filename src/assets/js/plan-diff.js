@@ -12,7 +12,7 @@
    ========================================================================== */
 import {
   indexPlans, indexCrosswalk, listStates, listCounties, plansInCounty,
-  buildDiff, planTypeLabel,
+  buildDiff, planTypeLabel, isSampleDataset,
 } from "./lib/plandiff-core.js";
 
 const $ = (id) => document.getElementById(id);
@@ -110,11 +110,13 @@ ready(async () => {
   let meta = { currentIndex: null, nextIndex: null, crosswalk: null, currentYear: 2026, nextYear: 2027, sample: true };
 
   /* ---- Sample-data disclosure ----------------------------------------
-     The markup ships in the honest (sample) state, so this only ever has to
-     turn the warning OFF — and only when the manifest positively says the
-     data came from real CMS files. */
+     The page ships the disclosure only when the build decided the dataset is
+     (partly) sample, so this only ever has to turn the warning OFF — and
+     only when the manifest positively says every part came from real CMS
+     files. The decision itself is isSampleDataset() in plandiff-core.js, so
+     the browser, the build and the tests all answer it the same way. */
   function applyProvenance(manifest) {
-    const isSample = !manifest || manifest.sample !== false;
+    const isSample = isSampleDataset(manifest);
     meta.sample = isSample;
     if (els.banner) els.banner.hidden = !isSample;
     if (els.bannerInline) els.bannerInline.hidden = !isSample;

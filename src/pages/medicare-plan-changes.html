@@ -26,23 +26,27 @@ changefreq: weekly
         <p class="muted" style="margin:0.35rem 0 0;">Your plan ID (like <code>H1234-001</code>) is on your member card and on the Annual Notice of Change (ANOC) your plan mailed you.</p>
       </div>
       <div class="tool__body">
-        <!-- Sample-data warning. Shown by default and hidden only when the data
-             manifest says the figures come from real CMS files, so a script
-             failure can never leave made-up numbers looking official. -->
-        <div class="callout callout--warn" id="pd-sample-banner" style="margin-bottom:1.1rem;border-left-width:10px;">
+        <!-- Sample-data warning. The build keeps this block only when ANY part
+             of the plan dataset is sample, so the shipped HTML already says
+             the right thing before a single script runs: with real CMS data
+             for all three parts there is no banner at all, and with a sample
+             part the banner is present and visible (script only ever hides
+             it, never depends on showing it). -->
+        {{#sample}}<div class="callout callout--warn" id="pd-sample-banner" style="margin-bottom:1.1rem;border-left-width:10px;">
           <!-- Deliberately NOT .callout__title: that class is recoloured for dark
                mode, which prints as near-white on white paper. This warning has to
                survive being printed from any browser, in any theme. -->
           <p style="font-weight:800;font-size:1.1rem;margin-bottom:0.35rem;">These are sample numbers — not real plan data</p>
           <p style="margin:0 0 0.5rem;">The plan names, plan IDs and dollar amounts here are <strong>made up</strong>. They show how the comparison works until CMS publishes the official <span data-year-next>{{PLAN_YEAR_NEXT}}</span> plan files. Every plan name starts with the word <strong>“Sample”</strong>.</p>
           <p style="margin:0;"><strong>Do not use these numbers to make a decision about your coverage.</strong> For your real plan, use the official <a href="https://www.medicare.gov/plan-compare/" rel="nofollow noopener" target="_blank">Medicare Plan Finder</a> or call 1‑800‑MEDICARE (TTY 1‑877‑486‑2048).</p>
-        </div>
+        </div>{{/sample}}
 
         <!-- Page-local provenance line: it must be able to say "sample" while the
              dataset is sample, which the shared provenance-strip partial cannot. -->
         <p class="datasource" id="pd-provenance" data-verified="{{DATA_UPDATED}}">
-          <span class="badge badge--warn">Sample data — not real plan figures</span>
-          <span class="badge badge--neutral">Built to match the CMS Landscape &amp; Crosswalk layout</span>
+          {{#sample}}<span class="badge badge--warn">Sample data — not real plan figures</span>
+          <span class="badge badge--neutral">Built to match the CMS Landscape &amp; Crosswalk layout</span>{{/sample}}{{#real}}<span class="badge badge--info">Source: CMS Landscape &amp; Crosswalk files</span>
+          <span class="badge badge--neutral">Public CMS plan data</span>{{/real}}
         </p>
 
         <form id="plandiff-form" novalidate>
@@ -94,7 +98,7 @@ changefreq: weekly
           <div class="result__head" id="pd-headline">Your plan comparison</div>
           <div class="result__body">
             <!-- Travels with the numbers, including onto the printed page. -->
-            <p id="pd-sample-inline" style="margin:0 0 0.9rem;font-weight:700;">Sample numbers — these figures are made up to show how the tool works. They are not your plan's real numbers.</p>
+            {{#sample}}<p id="pd-sample-inline" style="margin:0 0 0.9rem;font-weight:700;">Sample numbers — these figures are made up to show how the tool works. They are not your plan's real numbers.</p>{{/sample}}
             <p style="margin:0 0 0.75rem;"><span class="badge badge--neutral" id="pd-status">Status</span></p>
             <div class="grid grid--2" style="gap:1rem;margin-bottom:0.5rem;">
               <div>

@@ -141,27 +141,52 @@ console.log("\nSample-data disclosure");
   const manifest = JSON.parse(read(join(DIST, "data", "manifest.json")));
   const page = read(join(DIST, "medicare-plan-changes.html"));
 
-  if (manifest.sample === true) {
+  /* The dataset is sample if ANY part is sample: the current-year landscape,
+     the next-year landscape and the crosswalk are three separate files, and
+     one generated part puts made-up numbers next to real plan names. The
+     manifest's per-part flags are the source of truth. */
+  const parts = manifest.parts || {};
+  const partFlags = Object.values(parts).map((p) => (p && typeof p === "object" ? p.sample : p));
+  const anySample = partFlags.some((f) => f === true) || (partFlags.length ? false : manifest.sample !== false);
+
+  if (anySample) {
     /* The banner must ship VISIBLE and be hidden only by script, so that a JS
        failure degrades toward honesty. A `hidden` attribute in the built markup
        inverts that: the disclosure would then depend on the very script that
        could fail. */
     const banner = page.match(/<div[^>]*id="pd-sample-banner"[^>]*>/);
-    if (!banner) bad('manifest.sample is true but #pd-sample-banner is not in the built page');
+    if (!banner) bad('the dataset is sample but #pd-sample-banner is not in the built page');
     else if (/\shidden[\s>=]/.test(banner[0])) {
       bad(`#pd-sample-banner ships with a "hidden" attribute — the sample warning would depend on JS running: ${banner[0]}`);
     } else ok("#pd-sample-banner ships visible (hidden only by script)");
 
     const inline = page.match(/<p[^>]*id="pd-sample-inline"[^>]*>/);
-    if (!inline) bad('manifest.sample is true but #pd-sample-inline is not in the built page');
+    if (!inline) bad('the dataset is sample but #pd-sample-inline is not in the built page');
     else if (/\shidden[\s>=]/.test(inline[0])) bad('#pd-sample-inline ships hidden');
     else ok("#pd-sample-inline ships visible");
 
     page.toLowerCase().includes("sample")
       ? ok("the word \"sample\" is present in the built page text")
-      : bad('manifest.sample is true but the page never says "sample"');
+      : bad('the dataset is sample but the page never says "sample"');
   } else {
-    ok("manifest.sample is false — real CMS data; disclosure checks not applicable");
+    /* Real data: the disclosure must be GONE, not merely hidden. A banner
+       that survives in the markup says the opposite of the truth about every
+       number on the page. */
+    if (/id="pd-sample-banner"/.test(page)) {
+      bad('#pd-sample-banner is in the built page although every part of the dataset is real');
+    } else ok("#pd-sample-banner is absent from the built page (real CMS data)");
+
+    if (/id="pd-sample-inline"/.test(page)) {
+      bad('#pd-sample-inline is in the built page although every part of the dataset is real');
+    } else ok("#pd-sample-inline is absent from the built page");
+
+    /These are sample numbers/.test(page)
+      ? bad("the built page still carries the sample-banner wording although every part of the dataset is real")
+      : ok("no sample-banner wording in the built page");
+
+    /Source: CMS Landscape &amp; Crosswalk files/.test(page)
+      ? ok("the page names the CMS Landscape & Crosswalk files as the source")
+      : bad("the built page does not name the CMS source files");
   }
 }
 
