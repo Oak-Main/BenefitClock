@@ -10,7 +10,44 @@ built around all of it and the draft PR is green.
 
 ---
 
-## 1. DECIDE THE STAND-ALONE PART D (PDP) QUESTION — the only open item
+## 0. UNBLOCK CI — GitHub Actions is locked on a billing issue
+
+**The draft PR cannot go green until this is resolved, and only the owner can
+resolve it.** The M1b commits are not the cause.
+
+At 22:02 UTC on 2026-10-29, every GitHub-hosted job on PR #27 failed
+**without executing a single step**:
+
+> `The job was not started because your account is locked due to a billing issue.`
+
+- `build-and-test` ×2, `Analyze (actions)`, `Analyze (javascript-typescript)`
+  — all failed in 2–3 seconds with zero steps run.
+- A **re-run** of the failed job (`attempt 2`) failed identically.
+- **The `Cloudflare Pages` check PASSED** on the same commit — it runs on
+  Cloudflare's infrastructure, not a GitHub runner, so it is not affected. A
+  real build of the M1b commit succeeded on real infrastructure.
+- Every run on this branch **before 22:02 was green**, including the run on
+  the last M1 commit (`89d34c6`).
+
+**What the owner does:** clear the GitHub Actions billing hold on the account
+(update the payment method, or raise the Actions spending limit / convert to
+a plan that includes the minutes), then re-run the failed jobs on PR #27.
+
+**Evidence that the code itself is sound** — every CI step was run locally
+against the M1b commit and passed:
+
+| CI step | Local result |
+|---|---|
+| `node --test` | exit 0 — 128 tests, 128 pass |
+| `node scripts/dry-run-flip.mjs` | exit 0 |
+| `npm run build` | exit 0 — 16 pages |
+| Sanity-check the build output | exit 0 — 16 pages, no unresolved `{{` tokens |
+| `node scripts/verify-build-output.mjs` | exit 0 |
+| Check every internal link and asset resolves | exit 0 — all targets resolve across 16 pages |
+
+---
+
+## 1. DECIDE THE STAND-ALONE PART D (PDP) QUESTION — the only open product item
 
 **M1b-5 reported it. Nothing was built.** The analysis, the numbers and the
 proposed scope rule are in **`docs/PDP-SCOPE-ANALYSIS.md`**.

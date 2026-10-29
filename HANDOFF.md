@@ -279,8 +279,16 @@ a published star rating.
 | `npm test` | exit 0 — 128 tests, 128 pass, 0 fail |
 | `npm run verify:build` | exit 0 — including "#pd-sample-banner is absent from the built page (real CMS data)", the three "sample data" sentences absent from every built page, and "52 JSON-LD block(s) across 16 pages parse" |
 | Sample-state gate (next-year file moved aside) | exit 0 on all four — the banner returned, all three sentences returned, `verify:build` green, `npm test` green |
-| `node scripts/dry-run-flip.mjs` | run by CI (the COLA flip rehearsal) |
-| CI on the draft PR | green |
+| `node scripts/dry-run-flip.mjs` | exit 0 — run by CI (the COLA flip rehearsal) |
+| CI's sanity check (5 required files, ≥13 pages, no `{{` in the output) | exit 0 — 16 pages, no unresolved tokens |
+| CI's internal link/asset check | exit 0 — all targets resolve across 16 pages |
+| CI on the draft PR | **BLOCKED — not green.** All four GitHub-hosted jobs failed at 22:02 UTC with *"The job was not started because your account is locked due to a billing issue"*, zero steps executed, and a re-run failed identically. The `Cloudflare Pages` check **passed** on the same commit (it does not run on a GitHub runner). Every run on this branch before 22:02 was green. See `OWNER_STEPS.md` §0. |
+
+**CI status, stated plainly:** the M1b commits have **not** passed CI. They
+could not run. Every CI step was executed locally against the pushed commit
+and every one passed — the table above is the proof — but the authoritative
+gate is GitHub's, and it is blocked on an account billing hold that only the
+owner can clear. Do not read this branch as green until CI says so.
 
 The exit codes above are the real ones, recorded after every task in
 `PROGRESS.md`.

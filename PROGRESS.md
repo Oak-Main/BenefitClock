@@ -320,3 +320,38 @@ Exit codes: `build:data=0` `build=0` `test=0` `verify:build=0`
 - **Out of scope, untouched:** the 2027 Part B projection literals (the
   November job), merging, deploying.
 
+## 2026-10-29 22:02 — CI BLOCKED, not broken
+
+**The M1b CI run failed, and it did not run the code.** At 22:02 UTC every
+GitHub-hosted job on PR #27 failed in 2–3 seconds with **zero steps
+executed**, carrying the annotation:
+
+> `The job was not started because your account is locked due to a billing issue.`
+
+- Failed: `build-and-test` ×2, `Analyze (actions)`,
+  `Analyze (javascript-typescript)`.
+- **Passed: `Cloudflare Pages`** on the same commit `ac3c59c` — it runs on
+  Cloudflare's infrastructure, not a GitHub runner, so the hold does not
+  touch it. A real build of the M1b commit succeeded on real infrastructure.
+- A **re-run** (`attempt 2`) failed with the identical annotation.
+- Every run on this branch **before 22:02 was green**, including the run on
+  the last M1 commit `89d34c6`.
+
+**Every CI step was run locally against the pushed M1b commit instead**, and
+every one passed:
+
+| CI step | Local result |
+|---|---|
+| `node --test` | exit 0 — 128 tests, 128 pass |
+| `node scripts/dry-run-flip.mjs` | exit 0 |
+| `npm run build` | exit 0 — 16 pages |
+| Sanity-check the build output | exit 0 — 16 pages, no unresolved `{{` tokens |
+| `node scripts/verify-build-output.mjs` | exit 0 |
+| Check every internal link and asset resolves | exit 0 — all targets resolve across 16 pages |
+
+**Owner action:** clear the GitHub Actions billing hold, then re-run the
+failed jobs on PR #27. Recorded in `OWNER_STEPS.md` §0.
+
+**This branch is NOT green.** The local runs are evidence that the code is
+sound; the authoritative gate is GitHub's and it has not run.
+
