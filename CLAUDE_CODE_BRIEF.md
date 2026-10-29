@@ -1,66 +1,44 @@
-# CLAUDE_CODE_BRIEF — finalization list for lane M1
+# CLAUDE_CODE_BRIEF — finalization list for lane M1 (+ M1b)
 
 **Repo:** Oak-Main/BenefitClock · **Branch:** `mm/aep-2027-plans`
 **Draft PR:** https://github.com/Oak-Main/BenefitClock/pull/27 (green)
-**Written:** 2026-10-29
+**Written:** 2026-10-29 · **Updated after the owner's M1 review**
 
-The tool now runs on real CMS data. This list is what is left, in priority
-order, for whoever finalizes this.
+The tool now runs on real CMS data, with the premium a member actually pays.
+The owner's review of M1 found one blocking defect (the premium) and five
+follow-ups; all five are done. **What is left is below.**
 
 ---
 
-## Priority 1 — the site currently says something untrue
+## Priority 1 — decide the stand-alone Part D (PDP) question
 
-**Six passages tell readers the plan tool runs on made-up data. It does not.**
-The CMS CY2026 Landscape, CY2027 Landscape and CY2027 Plan Crosswalk are all
-loaded (`manifest.json` → `parts` → all three `sample: false`), and the
-sample banner is gone from the built page.
+**M1b-5 reported it; the owner decides.** Full analysis, numbers and the
+proposed scope rule: **`docs/PDP-SCOPE-ANALYSIS.md`**.
 
-Drafted replacements are in `content/drafts/aep-2027-copy.md`, each marked
-`status: needs-human-review`.
+The short version: the CY2027 file has **476 stand-alone Part D plans**,
+encoded with `Contract Category Type = "PDP"` and
+`County Name = "All Counties"` — geography comes from the state column plus
+`PDP Region`, never a county. **96 of them fall in our 10 states**
+(FL 11, TX 10, CA 10, NY 9, PA 8, AZ 9, OH 9, NC 11, GA 9, IL 10).
 
-1. `src/pages/open-enrollment.html:260` — the Open Enrollment hub says
-   "**Sample data.** The tool runs on clearly-labeled sample plans until CMS
-   publishes the … files." This is the worst one: it is on the AEP hub, in
-   front of every visitor, during the only season this matters.
-2. `src/pages/how-it-works.html:144-145` — the "honest note" callout now
-   admits to a sample dataset that no longer exists, and its last sentence
-   ("we would rather tell you this plainly than pretend the … numbers are
-   already final") reads as a false confession.
-3. `src/pages/medicare-plan-changes.html:206-208` — FAQ "Why don't I see
-   2027 numbers yet?"
-4. `src/pages/medicare-plan-changes.html:233` — the same stale answer in the
-   JSON-LD, where search engines will quote it. It also hardcodes `2027`
-   where the visible copy uses `{{PLAN_YEAR_NEXT}}` — a second defect that
-   would silently go wrong at the next roll.
-5. `src/pages/how-it-works.html:157-159` — the timeline entry for an event
-   that has already happened.
-6. `src/pages/medicare-plan-changes.html:40, 101` — the sample banner's own
-   wording, which returns the moment the data is only *partly* real.
+The proposed rule: include every PDP row whose state is one of ours, fanned
+out into every county of that state. Cost: **232 extra rows** (2,137 →
+2,369), a normalizer change (the premium comes from `Part D Total Premium`
+and the rating from `Part D Summary Star Rating`, because the consolidated
+premium and the overall star rating are both `Not Applicable` for a PDP), a
+plan-type rule that has to key on `Contract Category Type` rather than
+`National PDP`, and a crosswalk re-scope (**680** of the 9,144 national
+crosswalk rows involve a PDP contract and are currently dropped).
 
-**Mechanism is ready:** `{{#sample}} … {{/sample}}` / `{{#real}} … {{/real}}`
-blocks, resolved at build time from the manifest's per-part flags
-(`scripts/lib/sample-blocks.mjs`). Straight replacements are fine; per-part
-wording is better if a part ever goes missing again.
+**The lane's recommendation:** the current MA-only scope is defensible and
+honest for this AEP season — the site already says "It covers Medicare
+Advantage plans in the counties you can pick in the tool". Adding PDPs is a
+**scope increase, not a bug fix**, and it is worth doing before the next plan
+year rather than during this one.
 
-## Priority 2 — one new user-facing string to approve
+---
 
-`src/assets/js/lib/plandiff-core.js` → `fmtBool()` renders
-**"Not published by CMS in this file"** for the dental / vision / hearing
-rows, because the combined Landscape file does not publish those flags and
-the old behaviour printed "Not included" — a claim the file cannot support.
-
-Wording and capitalisation are the owner's call.
-
-## Priority 3 — decide the stand-alone Part D (PDP) gap
-
-The county-scoped Landscape file contains no national PDP plans
-(`National PDP` = `Not Applicable` on every scoped row), so the tool compares
-Medicare Advantage plans only. Is that acceptable for the AEP season, or
-should national PDP plans be added? Adding them needs a scope rule for a plan
-with no county in a State → County → Plan picker.
-
-## Priority 4 — the November 2027 Part B job (not this lane)
+## Priority 2 — the November 2027 Part B job (not this lane)
 
 1. Fill `part_b_premium` and `part_b_deductible` on the 2027 row of
    `src/data/medicare-figures.csv` from the Federal Register notice, and
@@ -70,47 +48,62 @@ with no county in a State → County → Plan picker.
    https://www.cms.gov/oact/tr/2026) and must not survive the official
    number.
 
-## Priority 5 — merge and deploy
+---
+
+## Priority 3 — merge and deploy
 
 The draft PR is green. This lane never merges, never deploys and never
 creates cloud resources. Cloudflare Pages deploys from `main` once merged.
 
 ---
 
+## Closed in M1b
+
+- **M1b-1 (BLOCKER) — the premium.** Fixed and re-verified: the consolidated
+  Part C+D premium now wins whenever it parses as a number. 1,947 of 2,137
+  CY2027 rows showed $0 before, 1,585 after. Largest single-row difference
+  $212.60.
+- **M1b-2 — the owner-approved copy**, typed exactly in `{{#sample}}` /
+  `{{#real}}` branches.
+- **M1b-3 — the benefit rows**: dropped when both years are unpublished.
+- **M1b-4 — the guard**, proven in both directions.
+- **M1b-5 — the PDP analysis**, read-only.
+
+---
+
 ## Open questions
 
-1. **Should the open-enrollment "Sample data" line be dropped or replaced?**
-   A replacement sentence is drafted; dropping it entirely is also defensible
-   now that the tool carries its own on-page provenance line.
-2. **Should the timeline entry in `how-it-works.html` stay as a past-tense
-   entry, or move to a "what happened" section?** The draft offers both.
-3. **Do you want the partially-real case handled per part?** Today the
-   disclosure is one blanket "sample" state. If a single file ever goes
-   missing, the honest wording has to name which part — the manifest already
-   knows. That needs per-part build branches and new sentences.
-4. **Is MA-only acceptable for the AEP season?** See Priority 3.
+1. **Should stand-alone Part D plans be shown in the picker?** See Priority
+   1. The lane has the numbers; the decision is the owner's.
+2. **If PDPs are added, what should the "Star rating" row say?** For a PDP
+   the rating is the *Part D drug* rating, not an overall rating. That is
+   copy, and copy is the owner's.
+3. **The partially-real case.** Today the disclosure is one blanket
+   "sample" state. If a single file ever goes missing, the honest wording
+   has to name which part — the manifest already knows. The `{{#sample}}` /
+   `{{#real}}` machinery is in place; per-part branches would need new
+   sentences.
 
 ## Things worth knowing
 
+- **The premium bug is a class of bug worth remembering.** `money()` returns
+  the string `"0"` for a `$0.00` cell, and `"0"` is truthy in JavaScript, so
+  a `||` chain over money strings silently prefers a `$0` over a real
+  number. `selectPremium()` checks **parsability**, never truthiness. The
+  same trap exists in the PDP columns, one column over.
 - **The three CMS files are hashed.** `docs/CMS-2027-SOURCES.md` has the page
   URL, release label, download date, and SHA-256 for both the archive and the
   extracted CSV of each. `src/data/manifest.json` quotes all of it. A data
   file without a provenance sidecar now **fails the build** — a number nobody
   can trace does not ship.
-- **The normalizer fixes three defects the earlier branch shipped.** 246 CY2026
-  rows carried `Not Applicable` as a premium, and 217 rows carried
-  `Plan Too New To Be Measured` as a MOOP. Those became `NaN` in the JSON,
-  which compares as "no change" and prints as a dash. Now they are empty
-  (unknown), never `NaN` and never `0`.
-- **The premium comes from `Part C Premium`, not the consolidated Part C+D
-  column.** The consolidated column is `Not Applicable` on every plan without
-  Part D — 209 of the 2,137 CY2027 rows — so it can only ever be a fallback.
-- **The five-plan spot check compared the shipped CSV against the raw CMS
-  archive**, not against itself: 5/5 match on plan name, premium, drug
-  deductible, MOOP and star rating (`HANDOFF.md` §5).
 - **The banner is decided at build time**, so the shipped HTML is correct
-  before any script runs, and `verify:build` fails if the banner is present
-  with real data or missing with sample data.
+  before any script runs. `verify:build` fails if the banner is present with
+  real data, if it is missing with sample data, or if any of the three
+  "this is sample data" sentences appears in a real build.
+- **Every JSON-LD block in every built page must parse** — a new gate, added
+  because the `{{#sample}}` / `{{#real}}` resolver now runs inside a
+  JSON-LD script tag, where a malformed result would be invisible to every
+  other check.
 - **The 2027 Part B projection was verified against CMS's primary source**
   before being left in place: the 2026 Medicare Trustees Report states
   $209.50 for 2027.

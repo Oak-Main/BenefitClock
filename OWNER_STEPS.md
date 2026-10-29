@@ -1,8 +1,8 @@
 # OWNER STEPS — what only the owner can do
 
-**Lane:** M1 · **Repo:** Oak-Main/BenefitClock · **Branch:** `mm/aep-2027-plans`
+**Lane:** M1 (+ M1b) · **Repo:** Oak-Main/BenefitClock · **Branch:** `mm/aep-2027-plans`
 **Draft PR:** https://github.com/Oak-Main/BenefitClock/pull/27
-**Written:** 2026-10-29
+**Written:** 2026-10-29 · **Updated after the owner's M1 review**
 
 Everything on this list needs a decision, an approval, or an account action
 that a construction lane cannot take. Nothing here blocks the build: the lane
@@ -10,41 +10,48 @@ built around all of it and the draft PR is green.
 
 ---
 
-## 1. APPROVE THE STALE COPY — live pages currently say the opposite of the truth
+## 1. DECIDE THE STAND-ALONE PART D (PDP) QUESTION — the only open item
 
-**This is the most urgent item.** Six passages still tell readers the plan
-tool runs on made-up data. It does not. The drafted replacements are in
-`content/drafts/aep-2027-copy.md`, each marked `status: needs-human-review`.
+**M1b-5 reported it. Nothing was built.** The analysis, the numbers and the
+proposed scope rule are in **`docs/PDP-SCOPE-ANALYSIS.md`**.
 
-| Priority | File:line | What it says today |
-|---|---|---|
-| **1** | `src/pages/open-enrollment.html:260` | "**Sample data.** The tool runs on clearly-labeled sample plans until CMS publishes the … files." — on the Open Enrollment hub, in front of every visitor |
-| **2** | `src/pages/how-it-works.html:144-145` | "Until CMS publishes the official … files … our plan tool runs on a structurally identical sample dataset … We would rather tell you this plainly than pretend the … numbers are already final." |
-| **3** | `src/pages/medicare-plan-changes.html:206-208` | FAQ "Why don't I see 2027 numbers yet?" |
-| **4** | `src/pages/medicare-plan-changes.html:233` | The same stale answer in the FAQ structured data (JSON-LD) — and it hardcodes "2027" where the visible copy uses `{{PLAN_YEAR_NEXT}}` |
-| **5** | `src/pages/how-it-works.html:157-159` | Timeline entry written in the future tense for an event that has happened |
-| **6** | `src/pages/medicare-plan-changes.html:40, 101` | The sample banner's wording — not on the page today, but wrong again the moment the data is only partly real |
+The numbers that matter:
 
-**What the owner does:** read the drafts, edit as they see fit, and apply.
-The build-time switch they need (`{{#sample}}` / `{{#real}}`) already exists
-and is documented in `scripts/lib/sample-blocks.mjs`.
+- The CY2027 file holds **476 stand-alone Part D plans**. Their geography is
+  the **state** plus a **PDP Region** — `County Name` is `All Counties` on
+  every one of them.
+- **96 fall in our 10 states**: FL 11, TX 10, CA 10, NY 9, PA 8, AZ 9, OH 9,
+  NC 11, GA 9, IL 10.
+- A national PDP has **one contract ID and a state-specific plan ID**, and
+  its **premium is state-specific for the same brand** (Humana Basic Rx is
+  $6.30 in Alabama and Georgia, $118.30 in California, $90.30 in Florida).
+- The proposed rule would add **232 rows** (2,137 → 2,369) and re-scope the
+  crosswalk to pick up **680** currently-dropped PDP rows.
+- Two traps the implementer must know: a PDP's premium is in
+  `Part D Total Premium` (the consolidated column is `Not Applicable`), and
+  the plan-type rule has to key on `Contract Category Type` rather than
+  `National PDP` or the 62 regional PDPs become `MAPD`.
 
-**Decision needed:** straight replacement, or a build-time branch per part so
-the wording can name *which* part is generated when the data is only partly
-real (see draft #6 and #7).
+**The lane's recommendation:** the MA-only scope is defensible and honest for
+this AEP season — the site already says "It covers Medicare Advantage plans
+in the counties you can pick in the tool". PDPs are a scope increase, better
+made before the next plan year.
+
+**Owner decides.** If yes, the implementation is a normalizer change, a
+crosswalk re-scope, and one label question ("Star rating" would be a Part D
+rating for a PDP).
 
 ---
 
-## 2. REVIEW ONE NEW USER-FACING STRING
+## 2. APPROVE ONE NEW USER-FACING STRING
 
-`src/assets/js/lib/plandiff-core.js` → `fmtBool()` now renders:
+`src/assets/js/lib/plandiff-core.js` → `fmtBool()` renders:
 
 > Not published by CMS in this file
 
-That is what the dental / vision / hearing rows say, because the combined CMS
-Landscape file does not publish those flags at all. The previous behaviour
-printed "Not included", which is a claim about the plan that the file does not
-support.
+That is what the dental / vision / hearing rows say when **one** year
+published the flag and the other did not. (When **both** years are
+unpublished, the row is no longer rendered at all — M1b-3.)
 
 The wording and capitalisation are the owner's call. It is flagged
 `status: needs-human-review` at the bottom of
@@ -52,25 +59,7 @@ The wording and capitalisation are the owner's call. It is flagged
 
 ---
 
-## 3. DECIDE THE STAND-ALONE PART D (PDP) GAP
-
-The CMS Landscape file is county-scoped, and stand-alone Part D plans are
-national — `National PDP` reads `Not Applicable` on every scoped row. So
-**the tool compares Medicare Advantage plans only**; there are no Part D-only
-plans in the county pickers.
-
-This is inherited from the county-scoping approach, not introduced by this
-lane, and it was not fixed here because adding national PDP rows means
-deciding how a plan with no county should appear in a State → County → Plan
-picker.
-
-**What the owner decides:** is MA-only acceptable for the AEP season, or
-should national PDP plans be added (which needs a new scope rule and new
-copy)?
-
----
-
-## 4. THE 2027 PART B FIGURES — no action yet, but not this lane's to do
+## 3. THE 2027 PART B FIGURES — no action yet, but not this lane's to do
 
 The 2027 Part B premium and deductible are **not published** (the Federal
 Register notice lands in ~November 2026). `src/data/medicare-figures.csv`
@@ -88,11 +77,21 @@ projection figures (`~$209.50`, `~+$6.60`) listed in `HANDOFF.md` §4.
 
 ---
 
-## 5. MERGE AND DEPLOY — out of this lane's scope
+## 4. MERGE AND DEPLOY — out of this lane's scope
 
 This lane never merges, never deploys, never creates cloud resources. The
 draft PR is green and ready for review. Cloudflare Pages deploys from `main`
 automatically once the PR is merged.
+
+---
+
+## Closed since the last review
+
+- ~~Approve the stale copy~~ — **approved by the owner on 2026-10-29 and
+  applied** in M1b-2, in `{{#sample}}` / `{{#real}}` branches so both states
+  stay true.
+- ~~The blocking premium defect~~ — **fixed in M1b-1** and re-verified: the
+  consolidated Part C+D premium now wins whenever it parses as a number.
 
 ---
 

@@ -164,3 +164,159 @@ branch worktree with Node v24.18.0.
   Pages` (PR preview) pass.
 - **Not done, by lane design:** merging, deploying, the 2027 Part B row, the
   stale copy edits, the stand-alone PDP question.
+
+---
+
+# M1b — owner review follow-up (2026-10-29)
+
+The owner reviewed M1 and found one blocking defect plus five follow-ups.
+All five are done. Exit codes below are real, run in the branch worktree.
+
+## M1b-1 (BLOCKER) — the premium was wrong for every plan with drug coverage
+
+**The defect:** `normalize-landscape.mjs` read `Part C Premium` first. For an
+MAPD that is the medical benefit alone, and CMS very often writes `$0.00`
+there because the Part C premium is waived — the member pays the drug
+premium instead. The fallback to the consolidated column could not fire,
+because `money('$0.00')` returns the string `"0"`, and `"0"` is truthy in
+JavaScript, so a `||` chain silently preferred a `$0` Part C premium over a
+real consolidated one.
+
+**The fix:** `selectPremium()` in the new `scripts/lib/landscape-money.mjs`.
+The consolidated column wins whenever it **parses as a number**; `Part C
+Premium` is used only where the consolidated column reads `Not Applicable`
+(the 209 CY2027 / 237 CY2026 plans with no Part D at all). The check is on
+parsability, never truthiness.
+
+**The impact, from the same archives with the same SHA-256:**
+
+| | CY2026 | CY2027 |
+|---|---|---|
+| rows where the two columns differ | 876 | 501 |
+| largest single-row difference | $190.00 | **$212.60** |
+| $0 premiums **before** | 2,127 | **1,947** |
+| $0 premiums **after** | 1,382 | **1,585** |
+| rows where neither column parses | 0 | 0 |
+
+Largest CY2027 difference: `Independent Health's Encompass 65 RED 045 (HMO)`
+— $286.00 consolidated against a $73.40 Part C premium. Largest CY2026
+difference: `Independent Health's Encompass 65 RED 043 (HMO)`, $190.00
+consolidated against a $0.00 Part C premium.
+
+**What was done:** both years re-normalized from the same archives (hashes
+unchanged) with the fixed code; the provenance sidecars regenerated; the
+field-mapping table and a new "Which premium?" section added to
+`docs/CMS-2027-SOURCES.md`; the README's data section rewritten to describe
+the normalizer workflow; `tests/landscape-money.test.mjs` added (8 tests)
+covering Part C $0 + consolidated $12.40 → 12.4, consolidated `Not
+Applicable` + Part C $35 → 35, both $0 → 0, both non-numeric → empty.
+
+**The 5-plan spot check was redone** against the raw archive with BOTH
+columns shown — see `HANDOFF.md` §5.
+
+One of my own tests caught a subtlety worth recording: `Number("")` is `0`,
+not `NaN`. The empty premium string is exactly why the build's `numOrNull()`
+checks for `""` before it coerces.
+
+Exit codes: `build:data=0` `build=0` `test=0` `verify:build=0`
+
+## M1b-2 — the owner-approved copy, typed exactly
+
+Every passage kept its existing wording inside a `{{#sample}}` branch, with
+the approved text in a `{{#real}}` branch, so both states stay true:
+A `open-enrollment.html:260` · B `how-it-works.html:143-146` ·
+C `how-it-works.html:157-160` (existing timeline entry wrapped, no new
+words) · D `medicare-plan-changes.html:205-211` · E `medicare-plan-changes.html`
+JSON-LD (line 236) · F `medicare-plan-changes.html:40` and `:101` (the
+drafted replacements #6 and #7, approved as written).
+
+The resolver works **inside the JSON-LD script tag** — the FAQPage parses as
+JSON in both states. New `tests/plan-faq-parity.test.mjs` (4 tests) asserts
+the visible FAQ question and answer match the JSON-LD question and answer in
+both states, that the JSON-LD answer carries no HTML, and that neither
+state's JSON-LD hardcodes a plan year (the sample branch's literal `2027` is
+now `{{PLAN_YEAR_NEXT}}`).
+
+`scripts/verify-build-output.mjs` gained a new gate: **every JSON-LD block in
+every built page must parse** — 52 blocks across 16 pages. A JSON-LD block
+that does not parse is invisible to every other check on the page.
+
+Exit codes: `build:data=0` `build=0` `test=0` `verify:build=0`
+
+## M1b-3 — the benefit rows
+
+A dental / vision / hearing row is now **not rendered when both years are
+unpublished**. The rows still carry `fmtBool`'s "Not published by CMS in this
+file" for a **one-sided** null, because that row still says something. A
+published `false` is still a fact about the plan and still gets a row.
+
+Four new tests in `tests/plan-benefit-flags.test.mjs` (now 8 total).
+
+Exit codes: `build:data=0` `build=0` `test=0` `verify:build=0`
+
+## M1b-4 — the guard, proven in both directions
+
+`scripts/verify-build-output.mjs` now checks three sentences that tell a
+reader the tool runs on made-up data — `sample plans`,
+`structurally identical sample dataset` and `Why don't I see` — across
+**every built page**, not just the tool page.
+
+**Real direction:** with all three parts real, all three phrases are absent
+from every built page. Verified.
+
+**Sample direction:** with `src/data/landscape-next.csv` moved aside and
+rebuilt, all three phrases are present (in `dist/open-enrollment.html`,
+`dist/how-it-works.html` and `dist/medicare-plan-changes.html`), the banner
+ships visible, and `verify:build` is green. `npm test` is green in that state
+too. The files were then restored and the real dataset rebuilt.
+
+Exit codes (real state): `build:data=0` `build=0` `test=0` `verify:build=0`
+Exit codes (sample state): `build:data=0` `build=0` `test=0` `verify:build=0`
+
+## M1b-5 — stand-alone Part D, READ-ONLY
+
+Reported in `docs/PDP-SCOPE-ANALYSIS.md`. **Nothing was built.** The numbers:
+
+- The CY2027 file encodes a PDP with `Contract Category Type = "PDP"`
+  (476 rows nationally), `Plan Type = "PDP"`, `Organization Type = "Medicare
+  Prescription Drug Plan"`.
+- **`County Name` is `All Counties` on all 476 rows** — never a real county.
+  Geography comes from `State Territory Abbreviation` (56 states) plus
+  `PDP Region Code` / `PDP Region` (39 regions).
+- `National PDP` = `Yes` on 414 (every state) and `No` on 62 (regional PDPs).
+- A national PDP has **one contract ID and a state-specific plan ID**:
+  `Wellcare Classic (PDP)` is `S4802-071` in Alabama and `S4802-083` in
+  Florida. All PDP contract IDs start with `S`; MA contracts start with `H`
+  or `R`.
+- **PDP rows in our 10 states: 96** (FL 11, TX 10, CA 10, NY 9, PA 8, AZ 9,
+  OH 9, NC 11, GA 9, IL 10) — 96 distinct `contract|plan`, none offered in
+  two of our states.
+- **The premium is state-specific for the same brand**: Wellcare Classic is
+  $7.30 in AL/AZ/CA, $21.30 in CT, $28.30 in HI; Humana Basic Rx is $6.30 in
+  AL/GA but $118.30 in CA and $90.30 in FL.
+- **Four columns a PDP row cannot answer**: `Part C Premium`,
+  `Monthly Consolidated Premium (Part C + D)`, `In-Network MOOP` and
+  `Overall Star Rating` are all `Not Applicable`. The member-facing figures
+  are in `Part D Total Premium` and `Part D Summary Star Rating` — the same
+  column trap as M1b-1, one column over.
+- **Proposed scope rule:** include every PDP row whose state is one of ours,
+  fanned out into every county of that state, with `plan_type`/`network` =
+  `PDP`, premium from `Part D Total Premium`, star rating from
+  `Part D Summary Star Rating`, MOOP empty, and the crosswalk re-scoped to
+  match (680 of the 9,144 national crosswalk rows involve an `S` contract
+  and are currently dropped). Size: **232 extra rows**, 2,137 → 2,369.
+- Two things the owner should weigh: the normalizer's plan-type rule keys on
+  `National PDP` today and would mislabel the 62 regional PDPs as `MAPD`; and
+  the "Star rating" label would be a Part D rating for a PDP.
+
+Exit codes: `build:data=0` `build=0` `test=0` `verify:build=0`
+
+## M1b — final
+
+- Full gate, final run, real exit codes:
+  **`build:data=0` `build=0` `test=0` `verify:build=0`**
+- Test suite: **128 tests, 128 pass, 0 fail** (112 after M1, 91 before it).
+- Draft PR refreshed: https://github.com/Oak-Main/BenefitClock/pull/27
+- **Out of scope, untouched:** the 2027 Part B projection literals (the
+  November job), merging, deploying.
+

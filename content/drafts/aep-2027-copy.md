@@ -1,10 +1,23 @@
 ---
 title: AEP 2027 — copy made stale by the real CMS plan data
-status: needs-human-review
+status: applied
 prepared-by: construction lane M1 (BenefitDial)
 prepared-on: 2026-10-29
-applies-to: branch mm/aep-2027-plans (draft PR #27)
+approved-by: owner, 2026-10-29
+applied-in: M1b-2 (branch mm/aep-2027-plans, draft PR #27)
 ---
+
+> **STATUS UPDATE — 2026-10-29.** The owner reviewed this file and approved
+> the wording. It was **applied in M1b-2**, typed exactly as approved, with
+> every existing passage kept inside a `{{#sample}}` branch and the approved
+> text in a `{{#real}}` branch so that both states stay true.
+>
+> This file is kept as the record of **what changed and why**. The "drafted
+> replacement" blocks below are the wording that was approved and shipped.
+> The one exception is the final section, whose new user-facing string
+> ("Not published by CMS in this file") is still `needs-human-review` — it
+> was applied as part of M1b-1/M1b-3 because the lane's specification fixed
+> its meaning, and the wording is still the owner's to confirm.
 
 # Copy that the real CMS plan data made false
 
@@ -17,6 +30,11 @@ are now loaded (`src/data/manifest.json` → `parts` → all three `sample: fals
 below with the exact file:line, why each one is now false, and a drafted
 replacement for the owner to approve. **The pages themselves were not edited**
 — every replacement below is copy, and copy changes are the owner's call.
+
+> **As applied in M1b-2:** the owner approved the wording on 2026-10-29 and it
+> was applied exactly, in `{{#sample}}` / `{{#real}}` branches. The file:line
+> references below are the positions **before** the branches were added; the
+> wording is unchanged.
 
 ## How to apply these
 
