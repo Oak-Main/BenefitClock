@@ -150,7 +150,17 @@ branch worktree with Node v24.18.0.
 
 ## 2026-10-29 — finalization
 
+- **Fallback path exercised, not just written.** With
+  `src/data/landscape-next.csv` moved aside and rebuilt:
+  `current=real next=SAMPLE crosswalk=real`, top-level `sample=true`, the
+  next-year part generated (472 rows), the banner back in the built page and
+  shipping visible, and `verify:build` green. The files were then restored
+  and the real dataset rebuilt (`current=real next=real crosswalk=real`,
+  `sample=false`, banner absent).
 - `HANDOFF.md`, `CLAUDE_CODE_BRIEF.md`, `OWNER_STEPS.md` and this file
   written. Branch pushed. Draft PR refreshed.
+- **CI on the draft PR: green** — `build-and-test` pass, `Analyze (actions)`
+  pass, `Analyze (javascript-typescript)` pass, `CodeQL` pass, `Cloudflare
+  Pages` (PR preview) pass.
 - **Not done, by lane design:** merging, deploying, the 2027 Part B row, the
   stale copy edits, the stand-alone PDP question.
