@@ -37,7 +37,7 @@ changefreq: weekly
                mode, which prints as near-white on white paper. This warning has to
                survive being printed from any browser, in any theme. -->
           <p style="font-weight:800;font-size:1.1rem;margin-bottom:0.35rem;">These are sample numbers — not real plan data</p>
-          <p style="margin:0 0 0.5rem;">The plan names, plan IDs and dollar amounts here are <strong>made up</strong>. They show how the comparison works until CMS publishes the official <span data-year-next>{{PLAN_YEAR_NEXT}}</span> plan files. Every plan name starts with the word <strong>“Sample”</strong>.</p>
+          <p style="margin:0 0 0.5rem;">The plan names, plan IDs and dollar amounts here are <strong>made up</strong>. They show how the comparison works until the official CMS plan files are loaded.</p>
           <p style="margin:0;"><strong>Do not use these numbers to make a decision about your coverage.</strong> For your real plan, use the official <a href="https://www.medicare.gov/plan-compare/" rel="nofollow noopener" target="_blank">Medicare Plan Finder</a> or call 1‑800‑MEDICARE (TTY 1‑877‑486‑2048).</p>
         </div>{{/sample}}
 
@@ -98,7 +98,7 @@ changefreq: weekly
           <div class="result__head" id="pd-headline">Your plan comparison</div>
           <div class="result__body">
             <!-- Travels with the numbers, including onto the printed page. -->
-            {{#sample}}<p id="pd-sample-inline" style="margin:0 0 0.9rem;font-weight:700;">Sample numbers — these figures are made up to show how the tool works. They are not your plan's real numbers.</p>{{/sample}}
+            {{#sample}}<p id="pd-sample-inline" style="margin:0 0 0.9rem;font-weight:700;">Sample numbers — some of these figures are made up to show how the tool works. They are not your plan's real numbers.</p>{{/sample}}
             <p style="margin:0 0 0.75rem;"><span class="badge badge--neutral" id="pd-status">Status</span></p>
             <div class="grid grid--2" style="gap:1rem;margin-bottom:0.5rem;">
               <div>
@@ -203,10 +203,13 @@ changefreq: weekly
     </details>
 
     <details class="faq">
-      <summary>Why don't I see {{PLAN_YEAR_NEXT}} numbers yet?</summary>
+      {{#sample}}<summary>Why don't I see {{PLAN_YEAR_NEXT}} numbers yet?</summary>
       <div class="faq__body">
         <p>CMS releases the <span data-year-next>{{PLAN_YEAR_NEXT}}</span> Landscape and Crosswalk files in late September or early October. Until the official files are published, this tool runs on a structurally identical sample dataset so you can see exactly how the comparison works. The moment CMS posts the real files, we load them and the numbers become live. See <a href="/how-it-works">How it works</a>.</p>
-      </div>
+      </div>{{/sample}}{{#real}}<summary>Where do the {{PLAN_YEAR_NEXT}} numbers come from?</summary>
+      <div class="faq__body">
+        <p>From CMS's {{PLAN_YEAR_NEXT}} Landscape and Plan Crosswalk files, published in October {{AEP_SEASON_YEAR}}. The Landscape file gives each plan's premium, drug deductible, out-of-pocket limit and star rating by county; the Crosswalk file says whether your plan renews, merges into another plan, changes its service area or ends. The tool covers Medicare Advantage plans in the counties you can pick in the tool. See <a href="/how-it-works">How it works</a>.</p>
+      </div>{{/real}}
     </details>
   </div>
 </section>
@@ -230,7 +233,7 @@ changefreq: weekly
     { "@type": "Question", "name": "Where do I find my plan ID?", "acceptedAnswer": { "@type": "Answer", "text": "It's on your plan member ID card and on the Annual Notice of Change (ANOC) your plan mails every September. It looks like H1234-001 (or S/R followed by four digits for some plans). You can also just pick your plan by name from the dropdown." } },
     { "@type": "Question", "name": "Is this the official government tool?", "acceptedAnswer": { "@type": "Answer", "text": "No — and we say so proudly. BenefitDial is an independent utility. We use the same public CMS data the government publishes, but we're not affiliated with Medicare or CMS. For enrollment, always use the official Medicare Plan Finder or call 1-800-MEDICARE." } },
     { "@type": "Question", "name": "Will you ask for my phone number or sell my information?", "acceptedAnswer": { "@type": "Answer", "text": "Never. This tool doesn't collect your name, phone number, or email — there's no form to fill in and nothing is sent to a call center. That's the whole point of BenefitDial. Read our privacy pledge." } },
-    { "@type": "Question", "name": "Why don't I see {{PLAN_YEAR_NEXT}} numbers yet?", "acceptedAnswer": { "@type": "Answer", "text": "CMS releases the 2027 Landscape and Crosswalk files in late September or early October. Until the official files are published, this tool runs on a structurally identical sample dataset so you can see exactly how the comparison works. The moment CMS posts the real files, we load them and the numbers become live. See How it works." } }
+    {{#sample}}{ "@type": "Question", "name": "Why don't I see {{PLAN_YEAR_NEXT}} numbers yet?", "acceptedAnswer": { "@type": "Answer", "text": "CMS releases the {{PLAN_YEAR_NEXT}} Landscape and Crosswalk files in late September or early October. Until the official files are published, this tool runs on a structurally identical sample dataset so you can see exactly how the comparison works. The moment CMS posts the real files, we load them and the numbers become live. See How it works." } }{{/sample}}{{#real}}{ "@type": "Question", "name": "Where do the {{PLAN_YEAR_NEXT}} numbers come from?", "acceptedAnswer": { "@type": "Answer", "text": "From CMS's {{PLAN_YEAR_NEXT}} Landscape and Plan Crosswalk files, published in October {{AEP_SEASON_YEAR}}. The Landscape file gives each plan's premium, drug deductible, out-of-pocket limit and star rating by county; the Crosswalk file says whether your plan renews, merges into another plan, changes its service area or ends. The tool covers Medicare Advantage plans in the counties you can pick in the tool. See How it works." } }{{/real}}
   ]
 }
 </script>

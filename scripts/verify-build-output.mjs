@@ -21,7 +21,7 @@
 
    Run after `npm run build`. Exits non-zero on any failure.
    ========================================================================== */
-import { readFileSync, existsSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -190,7 +190,41 @@ console.log("\nSample-data disclosure");
   }
 }
 
-/* ---- 5. Manifest icons resolve ---------------------------------------- */
+/* ---- 5. Structured data parses ---------------------------------------- */
+/* A JSON-LD block that does not parse is invisible to every other check on
+   this page: it renders fine, it links fine, and the only symptom is that
+   the search engines that read it get nothing. The plan pages carry
+   {{#sample}}/{{#real}} branches INSIDE a JSON-LD script tag, so this is
+   also the gate that proves the resolver did not leave the tag malformed. */
+console.log("\nStructured data (JSON-LD) parses");
+{
+  const pages = [];
+  const walk = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name.endsWith(".html")) pages.push(p);
+    }
+  };
+  walk(DIST);
+
+  let blocks = 0;
+  for (const file of pages) {
+    const html = read(file);
+    for (const m of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+      blocks++;
+      try {
+        JSON.parse(m[1]);
+      } catch (e) {
+        bad(`${file.replace(DIST, "dist")}: a JSON-LD block is not valid JSON — ${e.message}`);
+      }
+    }
+  }
+  if (!blocks) bad("no JSON-LD blocks found in the built pages — the structured data has gone missing");
+  else ok(`${blocks} JSON-LD block(s) across ${pages.length} pages parse`);
+}
+
+/* ---- 6. Manifest icons resolve ---------------------------------------- */
 console.log("\nPWA manifest icons");
 {
   const mf = JSON.parse(read(join(DIST, "site.webmanifest")));
