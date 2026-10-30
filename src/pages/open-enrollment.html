@@ -257,7 +257,7 @@ scripts: open-enrollment.js
   <div class="wrap">
     <h2 id="oeh-plan-title">Ready to compare plans?</h2>
     <p class="lead">Use the plan-comparison tool to see how your current plan stacks up against alternatives for {{PLAN_YEAR_NEXT}}.</p>
-    <p class="oeh-sample" role="status"><strong>Sample data.</strong> The tool runs on clearly-labeled sample plans until CMS publishes the {{PLAN_YEAR_NEXT}} plan landscape files (expected October&nbsp;{{AEP_SEASON_YEAR}}). The comparison process is real &mdash; the specific plan details are examples.</p>
+    <p class="oeh-sample" role="status">{{#sample}}<strong>Sample data.</strong> The tool runs on clearly-labeled sample plans until CMS publishes the {{PLAN_YEAR_NEXT}} plan landscape files (expected October&nbsp;{{AEP_SEASON_YEAR}}). The comparison process is real &mdash; the specific plan details are examples.{{/sample}}{{#real}}<strong>Real plan data.</strong> The tool runs on CMS's official {{PLAN_YEAR_NEXT}} Landscape and Plan Crosswalk files, published in October {{AEP_SEASON_YEAR}}. Plan names, premiums, deductibles, out-of-pocket limits and star ratings are the figures CMS published. It covers Medicare Advantage plans in the counties you can pick in the tool.{{/real}}</p>
     <p class="oeh-cta"><a class="btn btn--primary btn--lg" href="/medicare-plan-changes">Open the plan-comparison tool</a></p>
     <p class="oeh-note">You can also call 1-800-MEDICARE (1-800-633-4227) for free, one-on-one help. TTY users call 1-877-486-2048.</p>
   </div>

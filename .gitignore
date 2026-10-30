@@ -3,6 +3,10 @@ dist/
 
 # Generated data JSON (regenerated from CSV/seed by scripts/build-*-data.mjs)
 src/data/*.json
+# ...except the per-file provenance records the normalizers write. They are
+# hand-checked source records (URL, release label, download date, SHA-256), not
+# build output, and the manifest quotes them.
+!src/data/*.provenance.json
 
 # Node
 node_modules/
@@ -23,3 +27,7 @@ Thumbs.db
 # Large raw CMS source drops (ingest into src/data/*.csv, then discard the raw zips)
 raw-cms/
 *.zip
+# The extracted national Landscape / Crosswalk files are inputs, never outputs.
+# The normalized, county-scoped copies live in src/data/ and ARE committed.
+scripts/CY*_Landscape_*.csv
+scripts/PlanCrosswalk*.txt

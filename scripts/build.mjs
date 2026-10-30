@@ -25,6 +25,8 @@ import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import { colaHistoryChart, planCountChart } from "./lib/svgcharts.mjs";
 import { applyStatusBlocks } from "./lib/status-blocks.mjs";
+import { applySampleBlocks } from "./lib/sample-blocks.mjs";
+import { isSampleDataset } from "../src/assets/js/lib/plandiff-core.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
@@ -87,8 +89,13 @@ function resolveIncludes(html, seen = new Set()) {
   });
 }
 
-function applyTokens(html, tokens, cycleStatus) {
-  return applyStatusBlocks(html, cycleStatus).replace(/\{\{\s*([A-Z0-9_]+)\s*\}\}/g, (m, key) =>
+function applyTokens(html, tokens, cycleStatus, isSample) {
+  /* Sample blocks are resolved BEFORE the COLA status blocks and before the
+     tokens, so the status validator never sees a "{{#sample}}" marker and a
+     token inside a block that is kept still gets substituted. A block that is
+     dropped takes its tokens with it. */
+  const withBlocks = applyStatusBlocks(applySampleBlocks(html, isSample), cycleStatus);
+  return withBlocks.replace(/\{\{\s*([A-Z0-9_]+)\s*\}\}/g, (m, key) =>
     Object.prototype.hasOwnProperty.call(tokens, key) ? tokens[key] : m
   );
 }
@@ -183,6 +190,10 @@ function build() {
   } catch (err) {
     throw new Error(`Could not read src/data/manifest.json — the plan-comparison years come from it. (${err.message})`);
   }
+  /* Whether ANY part of the plan dataset is sample. The same function the
+     browser uses (plandiff-core.js) decides this, so the build and the page
+     can never disagree about whether the disclosure belongs on the page. */
+  const planIsSample = isSampleDataset(planManifest);
 
   const longDate = (iso) => {
     const [y, m, d] = String(iso || "").split("-").map(Number);
@@ -519,7 +530,7 @@ ${exampleRows.map((r) => `          <tr>
       PAGE_MODIFIED: lastCommitDate(join(pagesDir, file)) || SITE.buildDate,
     };
     const fm = (value, fallback) =>
-      applyTokens(String(value ?? fallback), { ...colaTokens, ...cycleTokens, ...SITE_TOKENS, ...pageDates, CANONICAL: canonical }, cycle.status);
+      applyTokens(String(value ?? fallback), { ...colaTokens, ...cycleTokens, ...SITE_TOKENS, ...pageDates, CANONICAL: canonical }, cycle.status, planIsSample);
 
     const tokens = {
       // TITLE lands in <title> and in several quoted attributes (og:title,
@@ -551,13 +562,26 @@ ${exampleRows.map((r) => `          <tr>
 
     let html = layout.replace("{{CONTENT}}", () => tokens.CONTENT);
     html = resolveIncludes(html);
-    html = applyTokens(html, tokens, cycle.status);
+    html = applyTokens(html, tokens, cycle.status, planIsSample);
 
     /* A token that never got substituted ships as literal "{{FOO}}" in front of
-       a reader. Treat it as a build failure rather than a proofreading problem. */
-    const orphans = [...new Set((html.match(/\{\{\s*[A-Z0-9_]+\s*\}\}|\{\{>\s*[a-z0-9\-_]+\s*\}\}/gi) || []))];
+       a reader. Treat it as a build failure rather than a proofreading problem.
+       An unresolved conditional block ships as literal "{{#sample}}" — also a
+       build failure, because it means the page asked a question the build
+       never answered. */
+    const orphans = [
+      ...new Set(
+        (html.match(/\{\{\s*[A-Z0-9_]+\s*\}\}|\{\{>\s*[a-z0-9\-_]+\s*\}\}/gi) || [])
+      ),
+    ];
     if (orphans.length) {
       throw new Error(`${file}: unresolved template token(s) in output: ${orphans.join(", ")}`);
+    }
+    const unclosedBlocks = [...new Set((html.match(/\{\{[#/][a-z]+\}\}/gi) || []))];
+    if (unclosedBlocks.length) {
+      throw new Error(
+        `${file}: unresolved conditional block(s) in output: ${unclosedBlocks.join(", ")}`
+      );
     }
 
     // Active nav state.

@@ -45,6 +45,45 @@ function yearWords(opts) {
 }
 
 /**
+ * True when ANY part of the plan dataset is sample data.
+ *
+ * The manifest's per-part flags are the source of truth: the current-year
+ * landscape, the next-year landscape and the crosswalk are three separate
+ * files, and a dataset built from two real files and one generated one is
+ * still a dataset with made-up numbers in it. The top-level `sample` flag
+ * says the same thing, but it is the summary — this function derives the
+ * answer from the parts so the browser, the build and the tests cannot
+ * disagree about whether the disclosure belongs on the page.
+ *
+ * A manifest with no parts at all (an older build) falls back to the
+ * top-level flag.
+ *
+ * @param {object|null} manifest
+ * @returns {boolean}
+ */
+export function isSampleDataset(manifest) {
+  if (!manifest) return true;
+  const parts = manifest.parts;
+  if (parts && typeof parts === "object") {
+    const flags = Object.values(parts).map((p) =>
+      p && typeof p === "object" ? p.sample : p
+    );
+    if (flags.some((f) => f === true)) return true;
+    if (flags.length && flags.every((f) => f === false)) return false;
+  }
+  return manifest.sample !== false;
+}
+
+/**
+ * A benefit flag CMS did not publish in the file the site read.
+ * null/undefined means "not published", which is different from false
+ * ("CMS published it and it says no").
+ */
+function isUnpublished(v) {
+  return v === null || v === undefined;
+}
+
+/**
  * Build lookup indexes over a flat list of plan records for a single year.
  *
  * Two records sharing one `contract|plan|county` identity are not a thing CMS
@@ -137,6 +176,10 @@ function fmtStars(n) {
   return `${v.toFixed(1)} ★`;
 }
 function fmtBool(b) {
+  /* null means CMS did not publish this flag in the file the site read.
+     "Not included" would be a claim about the plan that the file does not
+     support, so say what is actually true instead. */
+  if (b === null || b === undefined) return "Not published by CMS in this file";
   return b ? "Included" : "Not included";
 }
 function fmtNetwork(v) {
@@ -195,6 +238,26 @@ export function diffMetric(metric, prior, next, opts) {
   }
 
   if (metric.kind === "bool") {
+    /* A null flag is "CMS did not publish this in this file", on either
+       side. Comparing it would turn an unknown into a fact — "Newly added"
+       for a plan whose next-year row simply came from a different file.
+       So an unpublished flag is never comparable. */
+    const aUnknown = a === null || a === undefined;
+    const bUnknown = b === null || b === undefined;
+    if (aUnknown || bUnknown) {
+      return {
+        field: metric.field,
+        label: metric.label,
+        kind: metric.kind,
+        priorText: formatMetric(metric.kind, a),
+        nextText: formatMetric(metric.kind, b),
+        priorRaw: a,
+        nextRaw: b,
+        direction: "na",
+        tone: "flat",
+        deltaText: aUnknown && bUnknown ? "Not published by CMS in this file" : "Not applicable",
+      };
+    }
     const av = !!a, bv = !!b;
     if (av === bv) {
       direction = "flat"; tone = "flat"; deltaText = "No change";
@@ -359,7 +422,26 @@ export function buildDiff(args) {
     };
   }
 
-  const metrics = next ? METRICS.map((m) => diffMetric(m, prior, next, yearOpts)) : [];
+  /* A row whose value CMS did not publish on EITHER side is not a row a
+     reader can act on. When both years are unpublished for a benefit flag
+     (the combined Landscape file publishes no dental / vision / hearing
+     flags at all), the row is dropped rather than rendered as a row of
+     "not published" — three dead rows in every comparison is noise, and it
+     hides the rows that DO carry a real change. A ONE-SIDED null is kept:
+     that row still says something (one year published it, the other did
+     not), so it keeps the "Not published by CMS in this file" wording. */
+  const metrics = next
+    ? METRICS
+        .filter(
+          (m) =>
+            !(
+              m.kind === "bool" &&
+              isUnpublished(prior[m.field]) &&
+              isUnpublished(next[m.field])
+            )
+        )
+        .map((m) => diffMetric(m, prior, next, yearOpts))
+    : [];
 
   // Headline: premium movement is what people feel first.
   let headline = info.label;

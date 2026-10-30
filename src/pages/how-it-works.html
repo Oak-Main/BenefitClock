@@ -141,8 +141,9 @@ changefreq: monthly
     </div>
 
     <div class="callout callout--warn">
-      <p class="callout__title">An honest note about {{PLAN_YEAR_NEXT}}</p>
-      <p style="margin:0;">Until CMS publishes the official {{PLAN_YEAR_NEXT}} files (late September / early October), our plan tool runs on a <strong>structurally identical sample dataset</strong> — same fields, same layout, real behavior — so you can see exactly how the comparison works before the real numbers exist. The moment CMS posts the actual files, we load them and the tool becomes live. We would rather tell you this plainly than pretend the {{PLAN_YEAR_NEXT}} numbers are already final.</p>
+      {{#sample}}<p class="callout__title">An honest note about {{PLAN_YEAR_NEXT}}</p>
+      <p style="margin:0;">Until CMS publishes the official {{PLAN_YEAR_NEXT}} files (late September / early October), our plan tool runs on a <strong>structurally identical sample dataset</strong> — same fields, same layout, real behavior — so you can see exactly how the comparison works before the real numbers exist. The moment CMS posts the actual files, we load them and the tool becomes live. We would rather tell you this plainly than pretend the {{PLAN_YEAR_NEXT}} numbers are already final.</p>{{/sample}}{{#real}}<p class="callout__title">Where the {{PLAN_YEAR_NEXT}} plan numbers come from</p>
+      <p style="margin:0;">The {{PLAN_YEAR_NEXT}} plan files are published, and the "What Changed" tool runs on them. It reads CMS's Landscape file, which lists each plan offered in a county with its premium, drug deductible, out-of-pocket limit and star rating, and CMS's Plan Crosswalk file, which says what happens to each plan next year: it renews, merges into another plan, changes its service area, or ends. Every figure in the comparison comes from those CMS files.</p>{{/real}}
     </div>
   </div>
 </section>
@@ -153,10 +154,10 @@ changefreq: monthly
     <h2>How we keep it up to date</h2>
     <p>There's a clear rhythm to the benefits year, and we follow it. Each autumn, as the government posts new files, we ingest them:</p>
     <ul class="timeline">
-      <li>
+      {{#sample}}<li>
         <span class="date">Late Sep – early Oct 2026</span>
         CMS releases the {{PLAN_YEAR_NEXT}} Landscape, Crosswalk, PUF, and PBP files. We load them, replacing the sample dataset, so the "What Changed" tool shows real plan changes.
-      </li>
+      </li>{{/sample}}
       <li>
         {{#projected}}<span class="date">{{COLA_ANNOUNCE_DATE_LONG}} (expected)</span>
         The BLS releases September CPI-W and the SSA is expected to announce the official {{COLA_PROJECTED_YEAR}} COLA. We update the confirmed figure across the site.{{/projected}}{{#official}}<span class="date">{{CYCLE_ANNOUNCE_DATE_LONG}}</span>

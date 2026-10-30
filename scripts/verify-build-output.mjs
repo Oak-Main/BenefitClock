@@ -21,7 +21,7 @@
 
    Run after `npm run build`. Exits non-zero on any failure.
    ========================================================================== */
-import { readFileSync, existsSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -141,31 +141,133 @@ console.log("\nSample-data disclosure");
   const manifest = JSON.parse(read(join(DIST, "data", "manifest.json")));
   const page = read(join(DIST, "medicare-plan-changes.html"));
 
-  if (manifest.sample === true) {
+  /* The dataset is sample if ANY part is sample: the current-year landscape,
+     the next-year landscape and the crosswalk are three separate files, and
+     one generated part puts made-up numbers next to real plan names. The
+     manifest's per-part flags are the source of truth. */
+  const parts = manifest.parts || {};
+  const partFlags = Object.values(parts).map((p) => (p && typeof p === "object" ? p.sample : p));
+  const anySample = partFlags.some((f) => f === true) || (partFlags.length ? false : manifest.sample !== false);
+
+  /* The three phrases that tell a reader the tool runs on made-up data. They
+     live in the {{#sample}} branch of three different pages, and the build
+     keeps that branch only while the dataset is sample. Each one is a
+     sentence a reader would take as a fact about the tool, so each one has
+     to appear in EVERY sample build and in NO real build. */
+  const STALE_WHEN_REAL = [
+    "sample plans",
+    "structurally identical sample dataset",
+    "Why don't I see",
+  ];
+
+  /* Every built page, not just the tool page: the open-enrollment hub and
+     the how-it-works page carry two of the three. */
+  const allPages = [];
+  const walk = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name.endsWith(".html")) allPages.push(p);
+    }
+  };
+  walk(DIST);
+  const corpus = allPages.map((f) => ({ file: f, text: read(f) }));
+
+  if (anySample) {
     /* The banner must ship VISIBLE and be hidden only by script, so that a JS
        failure degrades toward honesty. A `hidden` attribute in the built markup
        inverts that: the disclosure would then depend on the very script that
        could fail. */
     const banner = page.match(/<div[^>]*id="pd-sample-banner"[^>]*>/);
-    if (!banner) bad('manifest.sample is true but #pd-sample-banner is not in the built page');
+    if (!banner) bad('the dataset is sample but #pd-sample-banner is not in the built page');
     else if (/\shidden[\s>=]/.test(banner[0])) {
       bad(`#pd-sample-banner ships with a "hidden" attribute — the sample warning would depend on JS running: ${banner[0]}`);
     } else ok("#pd-sample-banner ships visible (hidden only by script)");
 
     const inline = page.match(/<p[^>]*id="pd-sample-inline"[^>]*>/);
-    if (!inline) bad('manifest.sample is true but #pd-sample-inline is not in the built page');
+    if (!inline) bad('the dataset is sample but #pd-sample-inline is not in the built page');
     else if (/\shidden[\s>=]/.test(inline[0])) bad('#pd-sample-inline ships hidden');
     else ok("#pd-sample-inline ships visible");
 
     page.toLowerCase().includes("sample")
       ? ok("the word \"sample\" is present in the built page text")
-      : bad('manifest.sample is true but the page never says "sample"');
+      : bad('the dataset is sample but the page never says "sample"');
+
+    /* The sample state must say all three things it is supposed to say. A
+       missing one is a reader told the data is made up in one place and
+       real in another. */
+    for (const phrase of STALE_WHEN_REAL) {
+      const hits = corpus.filter((c) => c.text.includes(phrase));
+      hits.length
+        ? ok(`"${phrase}" is present in the built pages (${hits.map((h) => h.file.replace(DIST, "dist")).join(", ")})`)
+        : bad(`the dataset is sample but "${phrase}" appears in NO built page — the sample disclosure is missing`);
+    }
   } else {
-    ok("manifest.sample is false — real CMS data; disclosure checks not applicable");
+    /* Real data: the disclosure must be GONE, not merely hidden. A banner
+       that survives in the markup says the opposite of the truth about every
+       number on the page. */
+    if (/id="pd-sample-banner"/.test(page)) {
+      bad('#pd-sample-banner is in the built page although every part of the dataset is real');
+    } else ok("#pd-sample-banner is absent from the built page (real CMS data)");
+
+    if (/id="pd-sample-inline"/.test(page)) {
+      bad('#pd-sample-inline is in the built page although every part of the dataset is real');
+    } else ok("#pd-sample-inline is absent from the built page");
+
+    /These are sample numbers/.test(page)
+      ? bad("the built page still carries the sample-banner wording although every part of the dataset is real")
+      : ok("no sample-banner wording in the built page");
+
+    /Source: CMS Landscape &amp; Crosswalk files/.test(page)
+      ? ok("the page names the CMS Landscape & Crosswalk files as the source")
+      : bad("the built page does not name the CMS source files");
+
+    /* And none of the three sentences that claim the tool runs on made-up
+       data may survive anywhere in the built site. */
+    for (const phrase of STALE_WHEN_REAL) {
+      const hits = corpus.filter((c) => c.text.includes(phrase));
+      hits.length
+        ? bad(`"${phrase}" is still in ${hits.map((h) => h.file.replace(DIST, "dist")).join(", ")} although every part of the dataset is real`)
+        : ok(`"${phrase}" is absent from every built page`);
+    }
   }
 }
 
-/* ---- 5. Manifest icons resolve ---------------------------------------- */
+/* ---- 5. Structured data parses ---------------------------------------- */
+/* A JSON-LD block that does not parse is invisible to every other check on
+   this page: it renders fine, it links fine, and the only symptom is that
+   the search engines that read it get nothing. The plan pages carry
+   {{#sample}}/{{#real}} branches INSIDE a JSON-LD script tag, so this is
+   also the gate that proves the resolver did not leave the tag malformed. */
+console.log("\nStructured data (JSON-LD) parses");
+{
+  const pages = [];
+  const walk = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name.endsWith(".html")) pages.push(p);
+    }
+  };
+  walk(DIST);
+
+  let blocks = 0;
+  for (const file of pages) {
+    const html = read(file);
+    for (const m of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+      blocks++;
+      try {
+        JSON.parse(m[1]);
+      } catch (e) {
+        bad(`${file.replace(DIST, "dist")}: a JSON-LD block is not valid JSON — ${e.message}`);
+      }
+    }
+  }
+  if (!blocks) bad("no JSON-LD blocks found in the built pages — the structured data has gone missing");
+  else ok(`${blocks} JSON-LD block(s) across ${pages.length} pages parse`);
+}
+
+/* ---- 6. Manifest icons resolve ---------------------------------------- */
 console.log("\nPWA manifest icons");
 {
   const mf = JSON.parse(read(join(DIST, "site.webmanifest")));

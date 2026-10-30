@@ -328,52 +328,122 @@ function parseCsv(text) {
   });
 }
 
-function main() {
-  let data;
-  let sample = true;
-  const haveReal =
-    existsSync(join(DATA, "landscape-current.csv")) &&
-    existsSync(join(DATA, "landscape-next.csv")) &&
-    existsSync(join(DATA, "crosswalk.csv"));
+/* A CMS cell that is not a number is not a number. CMS writes "Not
+   Applicable" and "Plan Too New To Be Measured" in money and rating cells.
+   Those must become null (unknown) — never NaN, which compares as "no
+   change" and prints as a dash, and never 0, which reads as a genuinely
+   free plan. */
+function numOrNull(v) {
+  if (v === "" || v == null) return null;
+  const n = Number(String(v).trim());
+  return Number.isFinite(n) ? n : null;
+}
 
-  if (haveReal) {
-    sample = false;
-    const mapPlan = (r, year) => ({
-      contractId: r.contract_id || r.contractId,
-      planId: String(r.plan_id || r.planId).padStart(3, "0"),
-      segmentId: r.segment_id || "0",
-      orgName: r.organization_name || r.orgName || "",
-      planType: r.plan_type || r.planType || "",
-      network: r.network || "",
-      planName: r.plan_name || r.planName || "",
-      premium: r.premium === "" ? null : Number(r.premium),
-      drugDeductible: r.drug_deductible === "" || r.drug_deductible == null ? null : Number(r.drug_deductible),
-      moop: r.moop === "" || r.moop == null ? null : Number(r.moop),
-      starRating: r.star_rating ? Number(r.star_rating) : null,
-      hasDrugCoverage: /^(1|true|y|yes)$/i.test(r.has_drug || ""),
-      hasDental: /^(1|true|y|yes)$/i.test(r.has_dental || ""),
-      hasVision: /^(1|true|y|yes)$/i.test(r.has_vision || ""),
-      hasHearing: /^(1|true|y|yes)$/i.test(r.has_hearing || ""),
-      state: r.state, county: r.county, fips: r.fips || "",
-      year, sample: false,
-    });
-    const current = parseCsv(readFileSync(join(DATA, "landscape-current.csv"), "utf8")).map((r) => mapPlan(r, CURRENT_YEAR));
-    const next = parseCsv(readFileSync(join(DATA, "landscape-next.csv"), "utf8")).map((r) => mapPlan(r, NEXT_YEAR));
-    const crosswalk = parseCsv(readFileSync(join(DATA, "crosswalk.csv"), "utf8")).map((r) => ({
-      fromContractId: r.previous_contract_id || r.fromContractId || null,
-      fromPlanId: r.previous_plan_id ? String(r.previous_plan_id).padStart(3, "0") : null,
-      toContractId: r.contract_id || r.toContractId || null,
-      toPlanId: r.plan_id ? String(r.plan_id).padStart(3, "0") : null,
-      status: (r.status || r.crosswalk_type || "renewal").toLowerCase(),
-    }));
-    data = { current, next, crosswalk, sample: false };
-  } else {
-    data = generate();
+/* A benefit flag CMS did not publish is null (unknown) — NOT false. "No"
+   would be a claim about the plan that the file does not support; the site
+   has to be able to say "CMS did not publish this in this file". */
+function flagOrNull(v) {
+  if (v === "" || v == null) return null;
+  return /^(1|true|y|yes)$/i.test(String(v).trim());
+}
+
+/* Read the sidecar a normalizer wrote next to its CSV. Real data with no
+   provenance record is not shippable: a manifest that cannot say WHERE a
+   number came from cannot be trusted with one. */
+function readProvenance(csvPath, part) {
+  const p = csvPath.replace(/\.csv$/, ".provenance.json");
+  if (!existsSync(p)) {
+    throw new Error(
+      `${csvPath} exists but ${p} does not.\n` +
+        `Re-run scripts/normalize-landscape.mjs / scripts/normalize-crosswalk.mjs so the ` +
+        `data file carries its own source record (URL, release label, download date, SHA-256).`
+    );
   }
+  try {
+    return { ...JSON.parse(readFileSync(p, "utf8")), sample: false };
+  } catch (err) {
+    throw new Error(`Could not read ${p}: ${err.message}`);
+  }
+}
 
-  writeFileSync(join(DATA, "plans-current.json"), JSON.stringify(data.current));
-  writeFileSync(join(DATA, "plans-next.json"), JSON.stringify(data.next));
-  writeFileSync(join(DATA, "crosswalk.json"), JSON.stringify(data.crosswalk));
+function main() {
+  const currentPath = join(DATA, "landscape-current.csv");
+  const nextPath = join(DATA, "landscape-next.csv");
+  const crossPath = join(DATA, "crosswalk.csv");
+
+  /* Each part is real or generated on its OWN. A real current-year file with
+     a generated crosswalk is a different dataset from a wholly generated one,
+     and the disclosure has to be able to say WHICH part is missing — so the
+     manifest carries per-part provenance and the banner keys off the parts. */
+  const haveCurrent = existsSync(currentPath);
+  const haveNext = existsSync(nextPath);
+  const haveCross = existsSync(crossPath);
+
+  const mapPlan = (r, year) => ({
+    contractId: r.contract_id || r.contractId,
+    planId: String(r.plan_id || r.planId).padStart(3, "0"),
+    segmentId: r.segment_id || "0",
+    orgName: r.organization_name || r.orgName || "",
+    planType: r.plan_type || r.planType || "",
+    network: r.network || "",
+    planName: r.plan_name || r.planName || "",
+    premium: numOrNull(r.premium),
+    drugDeductible: numOrNull(r.drug_deductible),
+    moop: numOrNull(r.moop),
+    starRating: numOrNull(r.star_rating),
+    hasDrugCoverage: /^(1|true|y|yes)$/i.test(r.has_drug || ""),
+    hasDental: flagOrNull(r.has_dental),
+    hasVision: flagOrNull(r.has_vision),
+    hasHearing: flagOrNull(r.has_hearing),
+    state: r.state, county: r.county, fips: r.fips || "",
+    year, sample: false,
+  });
+
+  const mapCrosswalk = (r) => ({
+    fromContractId: r.previous_contract_id || null,
+    fromPlanId: r.previous_plan_id ? String(r.previous_plan_id).padStart(3, "0") : null,
+    toContractId: r.contract_id || null,
+    toPlanId: r.plan_id ? String(r.plan_id).padStart(3, "0") : null,
+    status: (r.status || "renewal").toLowerCase(),
+  });
+
+  /* The generated fallback is only built when a part is actually missing. */
+  const needFallback = !haveCurrent || !haveNext || !haveCross;
+  const fallback = needFallback ? generate() : null;
+
+  const current = haveCurrent
+    ? parseCsv(readFileSync(currentPath, "utf8")).map((r) => mapPlan(r, CURRENT_YEAR))
+    : fallback.current;
+  const next = haveNext
+    ? parseCsv(readFileSync(nextPath, "utf8")).map((r) => mapPlan(r, NEXT_YEAR))
+    : fallback.next;
+  const crosswalk = haveCross
+    ? parseCsv(readFileSync(crossPath, "utf8")).map(mapCrosswalk)
+    : fallback.crosswalk;
+
+  /* Per-part provenance. A part with no data file is generated sample data,
+     and says so; a part with a data file carries the normalizer's own record
+     of where that file came from. */
+  const parts = {
+    current: haveCurrent
+      ? { ...readProvenance(currentPath, "current"), rows: current.length }
+      : { part: "current", planYear: CURRENT_YEAR, sample: true, rows: current.length, source: "generated sample", notes: "No src/data/landscape-current.csv present; the deterministic sample dataset was used." },
+    next: haveNext
+      ? { ...readProvenance(nextPath, "next"), rows: next.length }
+      : { part: "next", planYear: NEXT_YEAR, sample: true, rows: next.length, source: "generated sample", notes: "No src/data/landscape-next.csv present; the deterministic sample dataset was used." },
+    crosswalk: haveCross
+      ? { ...readProvenance(crossPath, "crosswalk"), rows: crosswalk.length }
+      : { part: "crosswalk", planYear: NEXT_YEAR, sample: true, rows: crosswalk.length, source: "generated sample", notes: "No src/data/crosswalk.csv present; the deterministic sample dataset was used." },
+  };
+
+  /* The dataset is sample if ANY part is sample. One generated part makes the
+     whole comparison sample — a real plan file beside a made-up crosswalk
+     would put invented successor rows under a real plan's name. */
+  const sample = parts.current.sample || parts.next.sample || parts.crosswalk.sample;
+
+  writeFileSync(join(DATA, "plans-current.json"), JSON.stringify(current));
+  writeFileSync(join(DATA, "plans-next.json"), JSON.stringify(next));
+  writeFileSync(join(DATA, "crosswalk.json"), JSON.stringify(crosswalk));
   writeFileSync(
     join(DATA, "manifest.json"),
     JSON.stringify(
@@ -381,20 +451,24 @@ function main() {
         currentYear: CURRENT_YEAR,
         nextYear: NEXT_YEAR,
         sample,
-        source: "CMS Landscape + Crosswalk files (public domain).",
-        counts: { current: data.current.length, next: data.next.length, crosswalk: data.crosswalk.length },
+        source: "CMS Medicare Advantage / Part D Landscape Source File + Plan Year Crosswalk (public domain).",
+        parts,
+        counts: { current: current.length, next: next.length, crosswalk: crosswalk.length },
         states: GEO.map((g) => g.state),
         note: sample
-          ? "SAMPLE DATA — structurally faithful placeholder used until the official 2027 CMS files are published. Replace src/data/landscape-*.csv + crosswalk.csv with the real files and rebuild."
-          : "Built from real CMS CSV files present in src/data/.",
+          ? "SAMPLE DATA — one or more parts are generated placeholders. The part that is missing is named in `parts`. Replace the corresponding src/data file with the real CMS file and rebuild."
+          : "Built from the official CMS Landscape and Plan Crosswalk files. Every part's source URL, release label, download date and SHA-256 are recorded in `parts`.",
       },
       null,
       2
     ) + "\n"
   );
 
+  const partState = (k) => (parts[k].sample ? "SAMPLE" : "real");
   console.log(
-    `  plans: ${data.current.length} current + ${data.next.length} next · crosswalk ${data.crosswalk.length} rows · ${sample ? "SAMPLE" : "REAL CMS"} data`
+    `  plans: ${current.length} current + ${next.length} next · crosswalk ${crosswalk.length} rows · ` +
+      `current=${partState("current")} next=${partState("next")} crosswalk=${partState("crosswalk")} · ` +
+      `${sample ? "SAMPLE" : "REAL CMS"} dataset`
   );
 }
 
