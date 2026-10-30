@@ -31,12 +31,10 @@ const manifestWith = (flags) => ({
 
 /* The visible FAQ text, with the markup a reader never sees removed. */
 function visibleText(fragment) {
+  const entities = { "&nbsp;": " ", "&amp;": "&", "&mdash;": "—", "&rsquo;": "’" };
   return fragment
-    .replace(/<[^>]+>/g, "")          // strip tags, keeping the text
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&mdash;/g, "—")
-    .replace(/&rsquo;/g, "’")
+    .split(/<[^>]+>/g).join("")      // compare text; this is not an HTML sanitizer
+    .replace(/&(?:nbsp|amp|mdash|rsquo);/g, (entity) => entities[entity])
     .replace(/\s+/g, " ")
     .trim();
 }
