@@ -2,15 +2,18 @@
 
 **Lane:** M1 (+ M1b) · **Repo:** Oak-Main/BenefitClock · **Branch:** `mm/aep-2027-plans`
 **Draft PR:** https://github.com/Oak-Main/BenefitClock/pull/27
-**Written:** 2026-10-29 · **Updated after the owner's M1 review**
+**Written:** 2026-10-29 · **Updated after the owner's M1 and M1b reviews**
+**Status: the lane is closed.** Both open product decisions are made; only the
+org-wide CI billing unlock remains, and that is the owner's.
 
 Everything on this list needs a decision, an approval, or an account action
 that a construction lane cannot take. Nothing here blocks the build: the lane
-built around all of it and the draft PR is green.
+built around all of it, and **the local gate is green on `752e52b`; GitHub CI
+is pending the org billing unlock**.
 
 ---
 
-## 0. UNBLOCK CI — GitHub Actions is locked on a billing issue
+## 0. UNBLOCK CI — GitHub Actions is locked on a billing issue (ORG-WIDE)
 
 **The draft PR cannot go green until this is resolved, and only the owner can
 resolve it.** The M1b commits are not the cause.
@@ -28,13 +31,19 @@ At 22:02 UTC on 2026-10-29, every GitHub-hosted job on PR #27 failed
   real build of the M1b commit succeeded on real infrastructure.
 - Every run on this branch **before 22:02 was green**, including the run on
   the last M1 commit (`89d34c6`).
+- **Owner, 2026-10-29 18:46 PT:** this is an **account billing lock across the
+  whole Oak-Main org** — `utility-engine`'s workflows fail the same way since
+  22:49 UTC — not this branch and not this code. **The owner is clearing it.
+  Do not re-request runs.**
 
 **What the owner does:** clear the GitHub Actions billing hold on the account
 (update the payment method, or raise the Actions spending limit / convert to
-a plan that includes the minutes), then re-run the failed jobs on PR #27.
+a plan that includes the minutes). Once it is cleared the runs will report
+themselves; **this lane does not re-request them.**
 
 **Evidence that the code itself is sound** — every CI step was run locally
-against the M1b commit and passed:
+against the M1b commit and passed, and the owner independently re-ran the gate
+on `752e52b` with the same result:
 
 | CI step | Local result |
 |---|---|
@@ -47,12 +56,19 @@ against the M1b commit and passed:
 
 ---
 
-## 1. DECIDE THE STAND-ALONE PART D (PDP) QUESTION — the only open product item
+## 1. STAND-ALONE PART D (PDP) — DECIDED: MA-only for the 2026 AEP season
 
-**M1b-5 reported it. Nothing was built.** The analysis, the numbers and the
-proposed scope rule are in **`docs/PDP-SCOPE-ANALYSIS.md`**.
+**Owner decision, 2026-10-29: MA-only for the 2026 AEP season**, as the lane
+recommended. The site covers Medicare Advantage plans in the counties you can
+pick in the tool, and the approved copy already says exactly that.
 
-The numbers that matter:
+**Nothing is built for PDPs.** The scope rule in
+**`docs/PDP-SCOPE-ANALYSIS.md`** — the encoding, the 96 plans in our 10
+states, the proposed scope rule, the cost (232 rows, 2,137 → 2,369), the
+crosswalk re-scope (680 rows), and the two traps the implementer must know —
+is **queued as a separate lane to run before the CY2028 files publish**.
+
+The numbers behind the decision, for whoever picks that lane up:
 
 - The CY2027 file holds **476 stand-alone Part D plans**. Their geography is
   the **state** plus a **PDP Region** — `County Name` is `All Counties` on
@@ -62,37 +78,24 @@ The numbers that matter:
 - A national PDP has **one contract ID and a state-specific plan ID**, and
   its **premium is state-specific for the same brand** (Humana Basic Rx is
   $6.30 in Alabama and Georgia, $118.30 in California, $90.30 in Florida).
-- The proposed rule would add **232 rows** (2,137 → 2,369) and re-scope the
-  crosswalk to pick up **680** currently-dropped PDP rows.
 - Two traps the implementer must know: a PDP's premium is in
   `Part D Total Premium` (the consolidated column is `Not Applicable`), and
   the plan-type rule has to key on `Contract Category Type` rather than
   `National PDP` or the 62 regional PDPs become `MAPD`.
 
-**The lane's recommendation:** the MA-only scope is defensible and honest for
-this AEP season — the site already says "It covers Medicare Advantage plans
-in the counties you can pick in the tool". PDPs are a scope increase, better
-made before the next plan year.
-
-**Owner decides.** If yes, the implementation is a normalizer change, a
-crosswalk re-scope, and one label question ("Star rating" would be a Part D
-rating for a PDP).
-
 ---
 
-## 2. APPROVE ONE NEW USER-FACING STRING
+## 2. THE NEW USER-FACING STRING — APPROVED as written
 
 `src/assets/js/lib/plandiff-core.js` → `fmtBool()` renders:
 
 > Not published by CMS in this file
 
-That is what the dental / vision / hearing rows say when **one** year
-published the flag and the other did not. (When **both** years are
-unpublished, the row is no longer rendered at all — M1b-3.)
-
-The wording and capitalisation are the owner's call. It is flagged
-`status: needs-human-review` at the bottom of
-`content/drafts/aep-2027-copy.md`.
+**Owner decision, 2026-10-29: approved as written.** That is what the dental
+/ vision / hearing rows say when **one** year published the flag and the
+other did not. (When **both** years are unpublished, the row is no longer
+rendered at all — M1b-3.) The wording and capitalisation are now settled and
+need no further review.
 
 ---
 
@@ -117,8 +120,9 @@ projection figures (`~$209.50`, `~+$6.60`) listed in `HANDOFF.md` §4.
 ## 4. MERGE AND DEPLOY — out of this lane's scope
 
 This lane never merges, never deploys, never creates cloud resources. The
-draft PR is green and ready for review. Cloudflare Pages deploys from `main`
-automatically once the PR is merged.
+**local gate is green on `752e52b`; GitHub CI is pending the org billing
+unlock** (§0). Cloudflare Pages deploys from `main` automatically once the PR
+is merged.
 
 ---
 
@@ -129,6 +133,11 @@ automatically once the PR is merged.
   stay true.
 - ~~The blocking premium defect~~ — **fixed in M1b-1** and re-verified: the
   consolidated Part C+D premium now wins whenever it parses as a number.
+- ~~Approve "Not published by CMS in this file"~~ — **approved as written**,
+  2026-10-29. See §2.
+- ~~Decide the stand-alone Part D question~~ — **decided: MA-only for the
+  2026 AEP season**, 2026-10-29. See §1. The PDP scope rule is queued as a
+  separate lane before the CY2028 files publish; **build nothing now**.
 
 ---
 

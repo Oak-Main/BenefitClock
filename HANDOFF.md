@@ -4,6 +4,9 @@
 **Branch:** `mm/aep-2027-plans` · **Draft PR:** https://github.com/Oak-Main/BenefitClock/pull/27
 **Base:** `origin/main` @ `0fe531a` · **Written:** 2026-10-29
 **Never merged, never deployed, no cloud resources created.**
+**Lane status: CLOSED** — M1 and M1b accepted by the owner on 2026-10-29, both
+open product decisions made. **Local gate green on `752e52b`; GitHub CI
+pending the org billing unlock** (§7).
 
 ---
 
@@ -33,7 +36,7 @@ cd BenefitClock
 git checkout mm/aep-2027-plans
 npm run build:data     # regenerates src/data/*.json from the committed CSVs
 npm run build          # 16 pages into dist/
-npm test               # 112 tests
+npm test               # 128 tests
 npm run verify:build   # content-level gate against the built output
 node scripts/serve.mjs # local preview
 ```
@@ -100,7 +103,8 @@ one.
       `content/drafts/aep-2027-copy.md`. Pages not edited.
 - [x] **Task 9** — the full gate run after every task with real exit codes in
       `PROGRESS.md`; the five-plan spot check in §5 below.
-- [x] Draft PR opened and green.
+- [x] Draft PR opened; **local gate green on `752e52b`; GitHub CI pending the
+      org billing unlock**.
 
 **M1b (owner review follow-up, 2026-10-29)**
 - [x] **M1b-1 (BLOCKER) — the premium fix.** The consolidated Part C+D
@@ -124,6 +128,16 @@ one.
 - [x] **M1b-5 — the PDP analysis**, read-only, in
       `docs/PDP-SCOPE-ANALYSIS.md`. Nothing built.
 
+**Owner decisions, 2026-10-29 — the lane is closed**
+
+1. **"Not published by CMS in this file" — APPROVED as written.** It is the
+   string the dental / vision / hearing rows show when one year published the
+   flag and the other did not.
+2. **Stand-alone Part D — MA-only for the 2026 AEP season.** The PDP scope
+   rule is a separate lane before the CY2028 files publish.
+3. **CI — an org-wide billing lock, not this branch.** The owner is clearing
+   it. **Do not re-request runs.**
+
 ## 4. NOT DONE — with reasons
 
 The owner reviewed M1 on 2026-10-29 and approved the copy. Items 1, 5 and 6
@@ -135,7 +149,7 @@ below are the M1b follow-ups; item 3 is the only remaining open item.
 | 2 | **The 2027 Part B row is not filled.** `src/data/medicare-figures.csv` line 32 keeps `part_b_premium` and `part_b_deductible` empty. | Out of scope for this lane: that row is filled from the Federal Register notice on the day it publishes (~November 2026). The Part D cells on that row (`2400`, `700`) are filled because CMS published those. |
 | 3 | **The hand-typed 2027 Part B projection (`~$209.50`, `~+$6.60`) is still in the copy** on `src/pages/guide-premiums.html` and `src/pages/guides.html`. | **Still open — the November job, explicitly out of scope for M1b.** There is no token for it and the 2027 Part B row must stay empty, so it cannot be driven from the data layer. The figure is correct today — it matches the 2026 Medicare Trustees Report exactly (https://www.cms.gov/oact/tr/2026) — and must be replaced when the official number lands. Every hit is listed below. |
 | 4 | **`src/assets/js/lib/cola-core.js:192` and `:314` still contain the literal `202.90`.** | It is a money-format example in a parse-error message, not a 2027 figure, and a pure browser module has no build-token path into it. The HTML layer around it is tokenised. |
-| 5 | **Stand-alone Part D (PDP) plans are still not in the tool.** | **M1b-5 reported it; the owner decides.** The county-scoped Landscape file carries no PDP rows (`County Name` is `All Counties` on all 476 of them). The full analysis, the numbers and the proposed scope rule are in `docs/PDP-SCOPE-ANALYSIS.md`. 96 PDP plans fall in our 10 states; including them is a scope increase of 232 rows (2,137 → 2,369) plus a crosswalk re-scope. Nothing was built. |
+| 5 | **Stand-alone Part D (PDP) plans are still not in the tool.** | **DECIDED (owner, 2026-10-29): MA-only for the 2026 AEP season**, as the lane recommended. The county-scoped Landscape file carries no PDP rows (`County Name` is `All Counties` on all 476 of them), and the site says so in the approved copy. The full analysis, the numbers and the proposed scope rule are in `docs/PDP-SCOPE-ANALYSIS.md`; that scope rule is **queued as a separate lane before the CY2028 files publish. Nothing was built now.** 96 PDP plans fall in our 10 states; including them would be a scope increase of 232 rows (2,137 → 2,369) plus a crosswalk re-scope of 680 rows. |
 | 6 | ~~**`medicare-plan-changes.html:233` hardcodes "2027".**~~ **FIXED in M1b-2.** | The JSON-LD FAQ now has matching `{{#sample}}` and `{{#real}}` branches, and a test asserts that neither state's JSON-LD hardcodes a plan year. |
 | 7 | **No merge, no deploy, no cloud resources, no registrations.** | Out of scope for this lane. |
 | 8 | **No page copy was written, rewritten or polished.** | The only prose applied is the wording the owner approved verbatim in M1b-2. |
@@ -282,13 +296,16 @@ a published star rating.
 | `node scripts/dry-run-flip.mjs` | exit 0 — run by CI (the COLA flip rehearsal) |
 | CI's sanity check (5 required files, ≥13 pages, no `{{` in the output) | exit 0 — 16 pages, no unresolved tokens |
 | CI's internal link/asset check | exit 0 — all targets resolve across 16 pages |
-| CI on the draft PR | **BLOCKED — not green.** All four GitHub-hosted jobs failed at 22:02 UTC with *"The job was not started because your account is locked due to a billing issue"*, zero steps executed, and a re-run failed identically. The `Cloudflare Pages` check **passed** on the same commit (it does not run on a GitHub runner). Every run on this branch before 22:02 was green. See `OWNER_STEPS.md` §0. |
+| CI on the draft PR | **BLOCKED — org-wide billing lock, not this branch.** All four GitHub-hosted jobs failed at 22:02 UTC with *"The job was not started because your account is locked due to a billing issue"*, zero steps executed, and a re-run failed identically. The `Cloudflare Pages` check **passed** on the same commit (it does not run on a GitHub runner). Every run on this branch before 22:02 was green. **Owner, 2026-10-29: this is an account billing lock across the whole Oak-Main org — `utility-engine`'s workflows fail the same way since 22:49 UTC — and the owner is clearing it. Do not re-request runs.** See `OWNER_STEPS.md` §0. |
 
 **CI status, stated plainly:** the M1b commits have **not** passed CI. They
 could not run. Every CI step was executed locally against the pushed commit
-and every one passed — the table above is the proof — but the authoritative
-gate is GitHub's, and it is blocked on an account billing hold that only the
-owner can clear. Do not read this branch as green until CI says so.
+and every one passed — the table above is the proof, and the owner
+independently re-ran the gate on `752e52b` with the same result — but the
+authoritative gate is GitHub's, and it is blocked on an org-wide billing hold
+that only the owner can clear. **The local gate is green on `752e52b`; GitHub
+CI is pending the org billing unlock.** Do not read this branch as green until
+CI says so.
 
 The exit codes above are the real ones, recorded after every task in
 `PROGRESS.md`.

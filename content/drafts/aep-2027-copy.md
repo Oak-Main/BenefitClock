@@ -14,10 +14,10 @@ applied-in: M1b-2 (branch mm/aep-2027-plans, draft PR #27)
 >
 > This file is kept as the record of **what changed and why**. The "drafted
 > replacement" blocks below are the wording that was approved and shipped.
-> The one exception is the final section, whose new user-facing string
-> ("Not published by CMS in this file") is still `needs-human-review` — it
-> was applied as part of M1b-1/M1b-3 because the lane's specification fixed
-> its meaning, and the wording is still the owner's to confirm.
+> The final section's new user-facing string ("Not published by CMS in this
+> file") was also **approved as written** on 2026-10-29, after being applied
+> in M1b-1/M1b-3 — the lane's specification fixed its meaning, and the owner
+> has now confirmed the wording.
 
 # Copy that the real CMS plan data made false
 
@@ -40,7 +40,7 @@ replacement for the owner to approve. **The pages themselves were not edited**
 
 Each block below gives the current line, the reason it is stale, and a
 drafted replacement. The drafted replacement is marked
-`status: needs-human-review`; nothing here has been applied to a page.
+`status: approved` (owner, 2026-10-29) and was applied in M1b-2.
 
 Two of the passages need a **build-time switch** rather than a straight swap,
 because the correct sentence depends on whether the dataset is sample or real.
@@ -66,7 +66,7 @@ official CMS Landscape and Crosswalk files, so the plan names, premiums,
 deductibles, MOOP amounts and star ratings on that page are the real ones.
 The sentence also promises a future event that has already happened.
 
-**Drafted replacement** — `status: needs-human-review`
+**Drafted replacement** — `status: approved` (owner, 2026-10-29)
 
 > **Real plan data.** The tool now runs on the official CMS Landscape and Crosswalk files, published in October {{AEP_SEASON_YEAR}}. The plan names, premiums, deductibles, maximum out-of-pocket amounts and star ratings you compare are the real published ones, and the same files the government publishes.
 
@@ -97,7 +97,7 @@ last sentence in particular — "we would rather tell you this plainly than
 pretend the numbers are already final" — now reads as a confession that the
 numbers are not final.
 
-**Drafted replacement** — `status: needs-human-review`
+**Drafted replacement** — `status: approved` (owner, 2026-10-29)
 
 Title:
 
@@ -122,7 +122,7 @@ were published in October 2026 and loaded. In the present tense this reads as
 a plan for something that has already been done. It is also a timeline of
 *upcoming* dates, so a past-dated entry in that list is a category error.
 
-**Drafted replacement** — `status: needs-human-review`
+**Drafted replacement** — `status: approved` (owner, 2026-10-29)
 
 Option A — keep it in the timeline and move it to the past tense:
 
@@ -150,7 +150,7 @@ The reader can see the numbers. The question presupposes a state the site is
 no longer in, so the answer tells them something untrue about the page they
 are looking at.
 
-**Drafted replacement** — `status: needs-human-review`
+**Drafted replacement** — `status: approved` (owner, 2026-10-29)
 
 Question:
 
@@ -181,7 +181,7 @@ Two separate problems in one line.
    class of bug the `AEP_LITERALS` guard in `scripts/build.mjs` exists to
    catch for enrolment dates, extended to the plan year.
 
-**Drafted replacement** — `status: needs-human-review`
+**Drafted replacement** — `status: approved` (owner, 2026-10-29)
 
 > { "@type": "Question", "name": "Where do the {{PLAN_YEAR_NEXT}} numbers come from?", "acceptedAnswer": { "@type": "Answer", "text": "From CMS's Landscape and Crosswalk files, published in October {{AEP_SEASON_YEAR}} and loaded in full. We publish both the figures and where they came from. See How it works." } }
 
@@ -208,7 +208,7 @@ by then the sentence can be false in two ways:
   file and a generated next-year file, the names on screen are real carrier
   names and this sentence would be false.
 
-**Drafted replacement** — `status: needs-human-review`
+**Drafted replacement** — `status: approved` (owner, 2026-10-29)
 
 > The plan names, plan IDs and dollar amounts here are **made up**. They show how the comparison works until the official CMS plan files are loaded.
 
@@ -234,7 +234,7 @@ the same partly-real case as #6: if the next-year landscape is real and the
 crosswalk is generated, the premium and deductible figures on screen *are*
 your plan's real numbers, and only the status line is not.
 
-**Drafted replacement** — `status: needs-human-review`
+**Drafted replacement** — `status: approved` (owner, 2026-10-29)
 
 > Sample numbers — some of these figures are made up to show how the tool works. They are not your plan's real numbers.
 
@@ -261,15 +261,14 @@ person does not re-open them:
 
 > Not published by CMS in this file
 
-This is the text the dental, vision and hearing rows show when CMS did not
-publish those flags. The combined Landscape file has no such columns, so
-without this the site would have to print "Not included" — a claim about the
-plan that the file does not support.
+This is the text the dental, vision and hearing rows show when CMS published
+the flag for one year and not the other. The combined Landscape file has no
+such columns, so without this the site would have to print "Not included" — a
+claim about the plan that the file does not support.
 
-**status: needs-human-review** — the wording and capitalisation are the
-owner's call. The lane's specification fixed the *meaning* ("not published by
-CMS in this file, never 'No'"); the exact string was chosen to match the
-lane's phrasing and has not been reviewed by a human.
+**status: APPROVED AS WRITTEN** — owner decision, 2026-10-29. It was applied
+as part of M1b-1/M1b-3 because the lane's specification fixed its meaning;
+the wording and capitalisation are now settled and need no further review.
 
 **Build-time provenance badges** (moved from runtime-only to build-time, so
 the page is truthful before any script runs):

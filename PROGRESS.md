@@ -355,3 +355,26 @@ failed jobs on PR #27. Recorded in `OWNER_STEPS.md` §0.
 **This branch is NOT green.** The local runs are evidence that the code is
 sound; the authoritative gate is GitHub's and it has not run.
 
+## 2026-10-29 18:46 PT — M1b accepted, lane closed
+
+- **The owner accepted M1b** and independently re-ran the gate on `752e52b`:
+  `build:data`, `build`, `test` (128/128), `verify:build` and
+  `dry-run-flip` all exit 0; the FL plan ships $173.00; the approved copy is
+  in the built pages verbatim; none of the three sample sentences appear in
+  the real build.
+- **Owner decision 1:** "Not published by CMS in this file" — **approved as
+  written**.
+- **Owner decision 2:** stand-alone Part D — **MA-only for the 2026 AEP
+  season**, as recommended. The PDP scope rule in
+  `docs/PDP-SCOPE-ANALYSIS.md` is **queued as a separate lane before the
+  CY2028 files publish; build nothing now.**
+- **Owner decision 3:** CI is an **account billing lock across the whole
+  Oak-Main org** (`utility-engine`'s workflows fail the same way since
+  22:49 UTC), not this branch and not this code. The owner is clearing it.
+  **Do not re-request runs.**
+- Final commit for this lane: docs only — the test count corrected to 128,
+  every "the draft PR is green" line replaced with **"local gate green on
+  `752e52b`; GitHub CI pending the org billing unlock"**, and both decisions
+  recorded in `OWNER_STEPS.md` and `CLAUDE_CODE_BRIEF.md`.
+- **The lane is closed.**
+
