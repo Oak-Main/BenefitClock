@@ -5,7 +5,7 @@
   "description": "BenefitDial — an independent, ad-supported public utility that helps Medicare beneficiaries compare their plan year-over-year and project their Social Security COLA. No phone numbers, no lead-gen, no data sales.",
   "type": "module",
   "scripts": {
-    "build": "node scripts/build.mjs",
+    "build": "node scripts/legal-build.mjs --check-only && node scripts/build.mjs && node scripts/legal-build.mjs --out dist",
     "build:data": "node scripts/build-cola-data.mjs && node scripts/build-medicare-figures.mjs && node scripts/build-aep-data.mjs && node scripts/build-plan-data.mjs",
     "clean": "node -e \"import('node:fs').then(fs=>fs.rmSync('dist',{recursive:true,force:true}))\"",
     "dev": "npm run build && node scripts/serve.mjs",
