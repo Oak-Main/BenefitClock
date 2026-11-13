@@ -1,0 +1,106 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const read = path => readFileSync(join(ROOT, path), 'utf8');
+const walk = dir => readdirSync(dir, { withFileTypes: true }).flatMap(entry =>
+  entry.isDirectory() ? walk(join(dir, entry.name)) : [join(dir, entry.name)]);
+const source = read('src/pages/privacy.html');
+const pages = [['source', source]];
+if (process.env.PRIVACY_HTML_PATH) {
+  pages.push(['built page', readFileSync(resolve(ROOT, process.env.PRIVACY_HTML_PATH), 'utf8')]);
+}
+const entities = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&nbsp;': ' ', '&mdash;': '—', '&rsquo;': '’' };
+const text = html => html.split(/<[^>]+>/g).join('')
+  .replace(/&(?:amp|lt|gt|nbsp|mdash|rsquo);/g, value => entities[value])
+  .replace(/\s+/g, ' ').trim();
+const withoutComments = html => html.replace(/<!--[\s\S]*?-->/g, '');
+const javascript = walk(join(ROOT, 'src/assets/js')).filter(path => path.endsWith('.js'));
+
+// This is an inventory/review gate, not a proof about third-party script behavior.
+// Unknown key expressions deliberately fail so new storage receives a disclosure review.
+function storageKeys() {
+  const keys = new Set();
+  for (const path of javascript) {
+    const code = readFileSync(path, 'utf8');
+    assert.doesNotMatch(code, /(?:sessionStorage\s*\.|indexedDB\s*\.|document\.cookie\s*=)/,
+      `New storage API in ${path}: review privacy and add behavioral coverage`);
+    for (const match of code.matchAll(/localStorage\.(?:getItem|setItem|removeItem)\(\s*([^,)]+)/g)) {
+      const expression = match[1].trim();
+      const literal = expression.match(/^['"]([^'"]+)['"]$/);
+      if (literal) { keys.add(literal[1]); continue; }
+      assert.match(expression, /^[A-Za-z_$][\w$]*$/, `Review dynamic storage key in ${path}`);
+      const constants = [...code.matchAll(/\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*['"]([^'"]+)['"]/g)];
+      const constant = constants.find(match => match[1] === expression);
+      assert.ok(constant, `Unresolved storage key ${expression} in ${path}`);
+      keys.add(constant[2]);
+    }
+  }
+  return [...keys].sort();
+}
+
+for (const [label, html] of pages) {
+  const plain = text(html);
+  test(`privacy avoids blanket cookie-free and anonymous-count claims (${label})`, () => {
+    assert.doesNotMatch(plain, /sets no cookies of its own|sets one first-party cookie|page counts only|we don't run analytics|our only measurement is the page-count/i);
+    assert.match(plain, /Google Analytics 4/);
+    assert.match(plain, /first-party analytics cookies/);
+    assert.match(plain, /_ga_<container-id>/);
+    assert.match(plain, /When GA4 measurement runs/);
+    assert.match(plain, /Loading the script does not, by itself/);
+    assert.match(plain, /Cloudflare Web Analytics/);
+  });
+
+  test(`privacy names every current interface storage key (${label})`, () => {
+    assert.deepEqual(storageKeys(), ['bc-textsize', 'benefitdial-oehub-checks']);
+    assert.match(plain, /localStorage/);
+    for (const key of storageKeys()) assert.ok(plain.includes(key), `Missing disclosure for ${key}`);
+    assert.doesNotMatch(plain, /There is one thing we do save|Close the tab and they're gone/);
+    assert.match(plain, /Clearing cookies alone may leave localStorage intact/);
+  });
+
+  test(`privacy distinguishes present advertising from future providers (${label})`, () => {
+    assert.match(plain, /No advertising network is currently active/);
+    assert.match(plain, /placeholders/);
+    assert.match(plain, /Before enabling it, we will update this policy/);
+    assert.doesNotMatch(plain, /We are paid when ads are shown|the ads you see are|some are affiliate links/);
+  });
+
+  test(`privacy visible FAQ and structured data agree (${label})`, () => {
+    const visible = [...html.matchAll(/<details class="faq">([\s\S]*?)<\/details>/g)].map(match => ({
+      question: text(match[1].match(/<summary>([\s\S]*?)<\/summary>/)[1]),
+      answer: text(match[1].match(/<div class="faq__body">([\s\S]*?)<\/div>/)[1]),
+    }));
+    const schemas = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(match => JSON.parse(match[1]));
+    const faq = schemas.find(schema => schema['@type'] === 'FAQPage');
+    assert.ok(faq, 'Missing FAQPage JSON-LD');
+    assert.ok(visible.length > 0, 'Missing visible FAQs');
+    assert.deepEqual(faq.mainEntity.map(item => ({question:item.name, answer:item.acceptedAnswer.text})), visible);
+  });
+
+  test(`privacy has an explicit revision date and honest consent wording (${label})`, () => {
+    assert.match(html, /Last updated: <time datetime="\d{4}-\d{2}-\d{2}">[A-Z][a-z]+ \d{1,2}, \d{4}<\/time>/);
+    assert.doesNotMatch(source, /Last updated:.*BUILD_YEAR/);
+    assert.match(plain, /no analytics consent banner or on-site analytics toggle/);
+    assert.match(plain, /does not use this signal to switch analytics on or off/);
+  });
+}
+
+test('new external scripts, consent code or monetization tags require a privacy review', () => {
+  const htmlFiles = [join(ROOT, 'src/layout.html'), ...walk(join(ROOT, 'src/pages')), ...walk(join(ROOT, 'src/partials'))]
+    .filter(path => path.endsWith('.html'));
+  const sources = new Set();
+  for (const path of htmlFiles) {
+    const html = withoutComments(readFileSync(path, 'utf8'));
+    for (const match of html.matchAll(/<script\b[^>]*\bsrc="(https?:\/\/[^\"]+)"/g)) sources.add(match[1]);
+    assert.doesNotMatch(html, /adsbygoogle|rel="[^"]*\bsponsored\b|href="[^"]*(?:amazon\.[a-z.]+\/[^\"]*[?&]tag=|\/go\/)/i,
+      `Monetization changed in ${path}; review privacy before changing this gate`);
+    assert.doesNotMatch(html, /gtag\(\s*['"]consent['"]/, `Consent implementation changed in ${path}; review the disclosure`);
+  }
+  assert.deepEqual([...sources].sort(), ['https://www.googletagmanager.com/gtag/js?id=G-FQNWJB3T8W']);
+  for (const path of javascript) assert.doesNotMatch(readFileSync(path, 'utf8'), /gtag\(\s*['"]consent['"]|navigator\.(?:doNotTrack|globalPrivacyControl)/,
+    `Privacy controls changed in ${path}; review the disclosure`);
+});

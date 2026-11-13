@@ -91,6 +91,9 @@ jobs:
       - name: Verify the built output against the data layer
         run: node scripts/verify-build-output.mjs
 
+      - name: Verify privacy copy, storage disclosures, and FAQ parity
+        run: PRIVACY_HTML_PATH=dist/privacy.html node --test tests/privacy-disclosures.test.mjs
+
       - name: Check every internal link and asset resolves
         run: |
           set -euo pipefail
