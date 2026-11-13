@@ -10,8 +10,9 @@ const walk = dir => readdirSync(dir, { withFileTypes: true }).flatMap(entry =>
   entry.isDirectory() ? walk(join(dir, entry.name)) : [join(dir, entry.name)]);
 const source = read('src/pages/privacy.html');
 const pages = [['source', source]];
-if (process.env.PRIVACY_HTML_PATH) {
-  pages.push(['built page', readFileSync(resolve(ROOT, process.env.PRIVACY_HTML_PATH), 'utf8')]);
+const builtPrivacyPath = process.env.PRIVACY_HTML_PATH;
+if (builtPrivacyPath) {
+  pages.push(['built page', readFileSync(resolve(ROOT, builtPrivacyPath), 'utf8')]);
 }
 const entities = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&nbsp;': ' ', '&mdash;': '—', '&rsquo;': '’' };
 function text(html) {
@@ -27,6 +28,16 @@ const htmlSources = htmlFiles.map(path => ({ path, html: readFileSync(path, 'utf
 const browserScripts = walk(join(ROOT, 'src/assets/js'))
   .filter(path => /\.[cm]?js$/.test(path))
   .map(path => ({ path, code: readFileSync(path, 'utf8') }));
+
+if (builtPrivacyPath) {
+  // The builder can emit markup from page metadata and partials.
+  const output = walk(dirname(resolve(ROOT, builtPrivacyPath)));
+  for (const path of output) {
+    if (path.endsWith('.html')) htmlSources.push({ path, html: readFileSync(path, 'utf8') });
+    if (/\.[cm]?js$/.test(path)) browserScripts.push({ path, code: readFileSync(path, 'utf8') });
+  }
+}
+
 const scriptUrls = new Set();
 const siteOrigin = 'https://benefitdial.com';
 
