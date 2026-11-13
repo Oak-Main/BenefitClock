@@ -17,7 +17,6 @@ const entities = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&nbsp;': ' ', '&mdas
 const text = html => html.split(/<[^>]+>/g).join('')
   .replace(/&(?:amp|lt|gt|nbsp|mdash|rsquo);/g, value => entities[value])
   .replace(/\s+/g, ' ').trim();
-const withoutComments = html => html.replace(/<!--[\s\S]*?-->/g, '');
 const javascript = walk(join(ROOT, 'src/assets/js')).filter(path => path.endsWith('.js'));
 
 // This is an inventory/review gate, not a proof about third-party script behavior.
@@ -94,11 +93,14 @@ test('new external scripts, consent code or monetization tags require a privacy 
     .filter(path => path.endsWith('.html'));
   const sources = new Set();
   for (const path of htmlFiles) {
-    const html = withoutComments(readFileSync(path, 'utf8'));
-    for (const match of html.matchAll(/<script\b[^>]*\bsrc="(https?:\/\/[^\"]+)"/g)) sources.add(match[1]);
-    assert.doesNotMatch(html, /adsbygoogle|rel="[^"]*\bsponsored\b|href="[^"]*(?:amazon\.[a-z.]+\/[^\"]*[?&]tag=|\/go\/)/i,
-      `Monetization changed in ${path}; review privacy before changing this gate`);
-    assert.doesNotMatch(html, /gtag\(\s*['"]consent['"]/, `Consent implementation changed in ${path}; review the disclosure`);
+    const sections = readFileSync(path, 'utf8').split(/<!--[\s\S]*?-->/g);
+    // Check each non-comment section directly. Joining them could create new markup.
+    for (const section of sections) {
+      for (const match of section.matchAll(/<script\b[^>]*\bsrc="(https?:\/\/[^\"]+)"/g)) sources.add(match[1]);
+      assert.doesNotMatch(section, /adsbygoogle|rel="[^"]*\bsponsored\b|href="[^"]*(?:amazon\.[a-z.]+\/[^\"]*[?&]tag=|\/go\/)/i,
+        `Monetization changed in ${path}; review privacy before changing this gate`);
+      assert.doesNotMatch(section, /gtag\(\s*['"]consent['"]/, `Consent implementation changed in ${path}; review the disclosure`);
+    }
   }
   assert.deepEqual([...sources].sort(), ['https://www.googletagmanager.com/gtag/js?id=G-FQNWJB3T8W']);
   for (const path of javascript) assert.doesNotMatch(readFileSync(path, 'utf8'), /gtag\(\s*['"]consent['"]|navigator\.(?:doNotTrack|globalPrivacyControl)/,
