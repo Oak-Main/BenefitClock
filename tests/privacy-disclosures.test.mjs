@@ -15,7 +15,7 @@ if (process.env.PRIVACY_HTML_PATH) {
 }
 const entities = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&nbsp;': ' ', '&mdash;': '—', '&rsquo;': '’' };
 function text(html) {
-  const tokens = html.matchAll(/<!--[\s\S]*?-->|<(head|script|style|template)\b[^>]*>[\s\S]*?<\/\1\s*>|<[^>]+>|([^<]+)/gi);
+  const tokens = html.matchAll(/<!--[\s\S]*?--!?>|<(head|script|style|template)\b[^>]*>[\s\S]*?<\/\1(?=[\s/>])[^>]*>|<[^>]+>|([^<]+)/gi);
   return Array.from(tokens, token => token[2] ?? '').join('')
     .replace(/&(?:amp|lt|gt|nbsp|mdash|rsquo);/g, value => entities[value])
     .replace(/\s+/g, ' ').trim();
@@ -31,7 +31,7 @@ const scriptUrls = new Set();
 const siteOrigin = 'https://benefitdial.com';
 
 for (const { path, html } of htmlSources) {
-  for (const [, attributes, code] of html.matchAll(/<!--[\s\S]*?-->|<script\b((?:[^>"']|"[^"]*"|'[^']*')*)>([\s\S]*?)<\/script\s*>/gi)) {
+  for (const [, attributes, code] of html.matchAll(/<!--[\s\S]*?--!?>|<script(?=[\s/>])((?:[^>"']|"[^"]*"|'[^']*')*)>([\s\S]*?)<\/script(?=[\s/>])[^>]*>/gi)) {
     if (attributes === undefined) continue;
     const attrs = new Map();
     for (const [, name, doubleQuoted, singleQuoted, unquoted] of attributes.matchAll(/([^\s=\/"'<>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>`]+)))?/g)) {
@@ -126,7 +126,7 @@ for (const [label, html] of pages) {
 
 test('new external scripts, consent code or monetization tags require a privacy review', () => {
   for (const { path, html } of htmlSources) {
-    const sections = html.split(/<!--[\s\S]*?-->/g);
+    const sections = html.split(/<!--[\s\S]*?--!?>/g);
     // Check each non-comment section directly. Joining them could create new markup.
     for (const section of sections) {
       assert.doesNotMatch(section, /adsbygoogle|rel="[^"]*\bsponsored\b|href="[^"]*(?:amazon\.[a-z.]+\/[^\"]*[?&]tag=|\/go\/)/i,
