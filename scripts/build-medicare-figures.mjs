@@ -15,7 +15,8 @@
        Deductibles" fact sheet (published Nov, effective Jan 1).
      - Part D cap: CMS Part D redesign guidance / annual parameters.
    Add one row per year, keep `source_updated` as the date the figure was
-   published, and rebuild.
+   published and `verified` as the date you confirmed it first-hand, and
+   rebuild. The site's "Figures verified" label reads `verified`.
    ========================================================================== */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -50,6 +51,7 @@ const rows = parseCsv(readFileSync(join(DATA, "medicare-figures.csv"), "utf8"))
     partDDeductible: num(r.part_d_deductible),
     status: r.status || "official",
     sourceUpdated: r.source_updated || null,
+    verified: r.verified || null,
     source: r.source || "",
   }))
   .sort((a, b) => a.year - b.year);
@@ -71,6 +73,9 @@ const out = {
   partDOopCap: current.partDOopCap,
   partDDeductible: current.partDDeductible,
   sourceUpdated: current.sourceUpdated,
+  // The date the current row was last confirmed first-hand. Falls back to the
+  // publication date for rows written before the column existed.
+  lastVerified: current.verified || current.sourceUpdated,
   source: current.source,
   history: rows,
 };

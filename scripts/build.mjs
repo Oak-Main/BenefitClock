@@ -257,10 +257,10 @@ function build() {
        COLA_DATA_UPDATED  — the COLA figures, which really are confirmed on the
                             day SSA announces; the newest of the COLA
                             announcement dates and the Medicare source date. */
-  const dataUpdated = figures.sourceUpdated || null;
+  const dataUpdated = figures.lastVerified || figures.sourceUpdated || null;
   const colaProvenanceDates = [
     ...(cola.history || []).map((h) => h.announced).filter(Boolean),
-    figures.sourceUpdated,
+    figures.lastVerified || figures.sourceUpdated,
   ].filter(Boolean).sort();
   const colaDataUpdated = colaProvenanceDates[colaProvenanceDates.length - 1] || null;
 
@@ -294,7 +294,7 @@ function build() {
     COLA_CONFIRMED_LATE_NOTE: cola.confirmedLateReason ? ` (later than usual because of ${cola.confirmedLateReason})` : "",
     COLA_LATE_YEAR: requireFigure(cola.lateYear, "COLA_LATE_YEAR", "No official row in src/data/cola-history.csv has a late_reason. The \"date can move\" sentences cite the most recent late announcement."),
     COLA_LATE_ANNOUNCED_LONG: longDate(requireFigure(cola.lateAnnounced, "COLA_LATE_ANNOUNCED_LONG", "The official row with a late_reason in src/data/cola-history.csv needs an `announced` date.")),
-    DATA_UPDATED: longDate(requireFigure(dataUpdated, "DATA_UPDATED", "No source_updated date on the current row of src/data/medicare-figures.csv.")),
+    DATA_UPDATED: longDate(requireFigure(dataUpdated, "DATA_UPDATED", "No verified or source_updated date on the current row of src/data/medicare-figures.csv.")),
     COLA_DATA_UPDATED: longDate(requireFigure(colaDataUpdated, "COLA_DATA_UPDATED", "No provenance dates found in the COLA history or Medicare figures.")),
 
     // Statutory Medicare figures — indexed annually, so never inline them in markup.
