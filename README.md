@@ -109,9 +109,12 @@ the JSON they produce is generated and gitignored.
   three are **indexed annually**, so none of them may be typed into page markup;
   pages reference `{{PART_B_PREMIUM}}`, `{{PART_B_DEDUCTIBLE}}`,
   `{{PART_D_OOP_CAP}}` and `{{MEDICARE_FIGURES_YEAR}}` instead. Add the new row
-  each November with `status=official` and the publication date in
-  `source_updated`; `scripts/build-medicare-figures.mjs` takes the latest official
-  row as current. The build fails if that row has no Part B premium.
+  each November with `status=official`, the publication date in
+  `source_updated` and the date you confirmed it first-hand in `verified`;
+  `scripts/build-medicare-figures.mjs` takes the latest official row as current.
+  The site's "Figures verified" and "Data last refreshed" labels read `verified`
+  (falling back to `source_updated`). The build fails if that row has no Part B
+  premium.
 
   > **2026 row confirmed first-hand (2026-09-28).** From a networked
   > environment, the Federal Register notice **2025-20251** (published
