@@ -24,9 +24,16 @@
 #     notice (published ~November) or the CMS "Parts A & B Premiums and
 #     Deductibles" fact sheet restating it.
 #   part_d_oop_cap — CMS Part D redesign / annual parameters for the new year.
+#
+# RE-CONFIRMED 2026-11-16 (first-hand, autumn check while the 2027 Part B notice
+# is still pending): govinfo.gov FR 2025-20251 still reads $202.90 and $283.00;
+# Medicare.gov's Part D costs page reads $2,100 and $615 for 2026 ($2,400 and $700
+# for 2027); SSA's COLA page reads 3.6 percent for 2027. The Federal Register API
+# lists no 2027 Part B notice (newest: 2025-20251). source_updated on the 2026 row
+# is that re-confirmation date, which is what "Figures verified" states.
 year,part_b_premium,part_b_deductible,part_d_oop_cap,part_d_deductible,status,source_updated,source
 2023,164.90,226,,,official,2022-09-27,CMS annual Medicare Parts A & B premiums and deductibles
 2024,174.70,240,,,official,2023-10-12,CMS annual Medicare Parts A & B premiums and deductibles
 2025,185.00,257,2000,,official,2024-11-08,CMS annual Medicare Parts A & B premiums and deductibles; Inflation Reduction Act Part D cap
-2026,202.90,283,2100,615,official,2026-09-28,Federal Register 2025-20251 (Part B premium and deductible) confirmed first-hand via GPO govinfo.gov 2026-09-28; Part D cap per CMS CY2026 Part D Redesign Program Instructions
+2026,202.90,283,2100,615,official,2026-11-16,Federal Register 2025-20251 (Part B premium and deductible) confirmed first-hand via GPO govinfo.gov 2026-09-28 and again 2026-11-16; Part D cap per CMS CY2026 Part D Redesign Program Instructions and the Medicare.gov Part D costs page read 2026-11-16
 2027,,,2400,700,announced,2026-10-10,Medicare.gov Part D costs page (CMS) read 2026-10-10 - Part D parameters only; the 2027 Part B figures are not published yet
