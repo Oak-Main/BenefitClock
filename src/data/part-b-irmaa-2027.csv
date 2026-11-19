@@ -1,0 +1,22 @@
+# 2027 Medicare Part B income-related monthly adjustment amounts (IRMAA).
+# STAGED EMPTY on purpose (Away Run 6, T8). Fill every value cell from the CMS
+# fact sheet "2027 Medicare Parts A & B Premiums and Deductibles" before this
+# file is used anywhere. tests/medicare-2027-partb.test.mjs fails while any
+# value cell is empty. Amounts are dollars per month; MAGI bounds are dollars.
+# filing: individual | joint | separate (married filing separately).
+filing,tier,magi_over,magi_up_to,irmaa,total_monthly_premium,status,source_updated,verified,source
+individual,1,,,,,,,,
+individual,2,,,,,,,,
+individual,3,,,,,,,,
+individual,4,,,,,,,,
+individual,5,,,,,,,,
+individual,6,,,,,,,,
+joint,1,,,,,,,,
+joint,2,,,,,,,,
+joint,3,,,,,,,,
+joint,4,,,,,,,,
+joint,5,,,,,,,,
+joint,6,,,,,,,,
+separate,1,,,,,,,,
+separate,2,,,,,,,,
+separate,3,,,,,,,,
