@@ -1,0 +1,24 @@
+# 2027 Medicare Part B income-related monthly adjustment amounts (IRMAA).
+# Filled 2026-11-19 from the CMS fact sheet 2027 Medicare Parts A & B Premiums and
+# Deductibles (released 2026-11-17). tests/medicare-2027-partb.test.mjs fails if any
+# value cell is emptied. Bounds as CMS states them: magi_over is "greater than",
+# magi_up_to is "less than or equal to", except tier 5 (individual/joint) and tier 2
+# (separate), whose upper bound CMS writes as "less than", and the top tier, which
+# CMS writes as "greater than or equal to" magi_over. Amounts are dollars per month; MAGI bounds are dollars.
+# filing: individual | joint | separate (married filing separately).
+filing,tier,magi_over,magi_up_to,irmaa,total_monthly_premium,status,source_updated,verified,source
+individual,1,,112000,0.00,209.40,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)
+individual,2,112000,141000,83.70,293.10,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)
+individual,3,141000,177000,209.40,418.80,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)
+individual,4,177000,212000,335.00,544.40,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)
+individual,5,212000,500000,460.60,670.00,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)
+individual,6,500000,,502.40,711.80,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)
+joint,1,,224000,0.00,209.40,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)
+joint,2,224000,282000,83.70,293.10,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)
+joint,3,282000,354000,209.40,418.80,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)
+joint,4,354000,424000,335.00,544.40,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)
+joint,5,424000,750000,460.60,670.00,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)
+joint,6,750000,,502.40,711.80,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)
+separate,1,,112000,0.00,209.40,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)
+separate,2,112000,388000,460.60,670.00,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)
+separate,3,388000,,502.40,711.80,official,2026-11-17,2026-11-19,CMS fact sheet 2027 Medicare Parts A & B Premiums and Deductibles (cms.gov; released 2026-11-17)

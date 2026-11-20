@@ -27,7 +27,7 @@ scripts: open-enrollment.js
       <a class="btn btn--ghost" href="/medicare-plan-changes">Open the plan-comparison tool</a>
     </p>
     <img src="/assets/img/open-enrollment.jpg" width="1600" height="900" loading="eager" decoding="async" alt="A small brass alarm clock beside a blank cream envelope and blank notecard on a warm walnut side table, with a dried maple leaf.">
-    <p class="oeh-note"><strong>A note on names:</strong> this is Medicare&rsquo;s enrollment window — different from the HealthCare.gov Marketplace open enrollment (Nov&nbsp;1&ndash;Jan&nbsp;15). If you buy your own insurance and are <em>not</em> on Medicare, those dates are not yours. The full walkthrough lives in <a href="/guides/medicare-aep-{{AEP_SEASON_YEAR}}">the AEP guide</a>.</p>
+    <p class="oeh-note"><strong>A note on names:</strong> this is Medicare&rsquo;s enrollment window — different from the HealthCare.gov Marketplace open enrollment (Nov&nbsp;1&ndash;Jan&nbsp;15, with December&nbsp;15 the last day to enroll for coverage that starts January&nbsp;1). If you buy your own insurance and are <em>not</em> on Medicare, those dates are not yours. The full walkthrough lives in <a href="/guides/medicare-aep-{{AEP_SEASON_YEAR}}">the AEP guide</a>.</p>
   </div>
 </section>
 
@@ -191,7 +191,7 @@ scripts: open-enrollment.js
 <section class="section oeh-costs" aria-labelledby="oeh-costs-title">
   <div class="wrap">
     <h2 id="oeh-costs-title">{{MEDICARE_FIGURES_YEAR}} Medicare costs &mdash; verified</h2>
-    <p class="lead">Current-year figures from official federal sources, confirmed first-hand. {{AEP_COVERAGE_YEAR}} amounts appear here as soon as they are announced.</p>
+    <p class="lead">Current-year figures from official federal sources, confirmed first-hand. The {{AEP_COVERAGE_YEAR}} Part B amounts were announced on November 17, 2026 and are shown beside them.</p>
     <div class="oeh-costs__grid">
       <div class="oeh-cost">
         <p class="oeh-cost__year">{{MEDICARE_FIGURES_YEAR}}</p>
@@ -217,17 +217,17 @@ scripts: open-enrollment.js
         <p class="oeh-cost__value">${{PART_D_OOP_CAP_NEXT}}</p>
         <p class="oeh-cost__source"><a href="https://www.medicare.gov/health-drug-plans/part-d/basics/costs" target="_blank" rel="noopener">Medicare.gov, Part D costs</a></p>
       </div>
-      <div class="oeh-cost oeh-cost--awaiting" data-slot="PART_B_PREMIUM_{{AEP_COVERAGE_YEAR}}">
+      <div class="oeh-cost" data-slot="PART_B_PREMIUM_{{AEP_COVERAGE_YEAR}}">
         <p class="oeh-cost__year">{{AEP_COVERAGE_YEAR}}</p>
         <h3>Part B monthly premium</h3>
-        <p class="oeh-cost__value oeh-cost__value--tbd">Not yet announced</p>
-        <p class="oeh-status oeh-status--awaiting"><span class="oeh-dot" aria-hidden="true"></span>Awaiting the fall announcement</p>
+        <p class="oeh-cost__value">${{PART_B_PREMIUM_NEXT}}</p>
+        <p class="oeh-cost__source"><a href="https://www.cms.gov/newsroom/fact-sheets/2027-medicare-parts-b-premiums-deductibles" target="_blank" rel="noopener">CMS fact sheet, November 17, 2026</a></p>
       </div>
-      <div class="oeh-cost oeh-cost--awaiting" data-slot="PART_B_DEDUCTIBLE_{{AEP_COVERAGE_YEAR}}">
+      <div class="oeh-cost" data-slot="PART_B_DEDUCTIBLE_{{AEP_COVERAGE_YEAR}}">
         <p class="oeh-cost__year">{{AEP_COVERAGE_YEAR}}</p>
         <h3>Part B annual deductible</h3>
-        <p class="oeh-cost__value oeh-cost__value--tbd">Not yet announced</p>
-        <p class="oeh-status oeh-status--awaiting"><span class="oeh-dot" aria-hidden="true"></span>Awaiting the fall announcement</p>
+        <p class="oeh-cost__value">${{PART_B_DEDUCTIBLE_NEXT}}</p>
+        <p class="oeh-cost__source"><a href="https://www.cms.gov/newsroom/fact-sheets/2027-medicare-parts-b-premiums-deductibles" target="_blank" rel="noopener">CMS fact sheet, November 17, 2026</a></p>
       </div>
     </div>
     <p class="oeh-costs__note">How these figures are sourced and re-verified: <a href="/guides/part-b-premium-and-your-cola">Part B premium and your COLA</a>.</p>
