@@ -311,6 +311,20 @@ function build() {
       `Add a ${planManifest.nextYear} row with part_d_oop_cap to src/data/medicare-figures.csv (status=announced is fine before the Part B notice).`
     )),
 
+    /* Part B for the coming year, once CMS has announced it. Looked up by year,
+       like the Part D cap above, so the current-year tokens stay on the year
+       people are being billed for until the calendar turns. */
+    PART_B_PREMIUM_NEXT: money(requireFigure(
+      ((figures.history || []).find((r) => Number(r.year) === Number(planManifest.nextYear)) || {}).partBPremium,
+      "PART_B_PREMIUM_NEXT",
+      `Add the ${planManifest.nextYear} part_b_premium to src/data/medicare-figures.csv.`
+    )),
+    PART_B_DEDUCTIBLE_NEXT: whole(requireFigure(
+      ((figures.history || []).find((r) => Number(r.year) === Number(planManifest.nextYear)) || {}).partBDeductible,
+      "PART_B_DEDUCTIBLE_NEXT",
+      `Add the ${planManifest.nextYear} part_b_deductible to src/data/medicare-figures.csv.`
+    )),
+
     // Plan-comparison years, straight from the plan data the tool actually loads.
     PLAN_YEAR_CURRENT: requireFigure(planManifest.currentYear, "PLAN_YEAR_CURRENT", "src/data/manifest.json has no currentYear — check scripts/build-plan-data.mjs."),
     PLAN_YEAR_NEXT: requireFigure(planManifest.nextYear, "PLAN_YEAR_NEXT", "src/data/manifest.json has no nextYear — check scripts/build-plan-data.mjs."),
