@@ -72,6 +72,7 @@ const exampleRows = parseCsv(readFileSync(join(DATA, "benefit-examples.csv"), "u
   monthlyBase: Number(r.monthly_base),
   partbBase: Number(r.partb_base || 0),
   source: r.source || "",
+  publishedAfter: r.monthly_after_published ? Number(r.monthly_after_published) : null,
 }));
 for (const e of exampleRows) {
   if (!e.key || !e.label || !Number.isFinite(e.monthlyBase) || e.monthlyBase <= 0) {
@@ -99,6 +100,26 @@ const priorRow = [...official].reverse().find((r) => r.year < cycleRow.year) || 
 
 const examples = exampleRows.map((e) => {
   const p = projectBenefit({ priorGross: e.monthlyBase, colaPercent: cycleRow.colaPct, priorPartB: e.partbBase });
+  if (e.publishedAfter !== null) {
+    /* SSA publishes this figure for each year itself (benefit-examples.csv,
+       monthly_after_published): show it, not monthly_base x COLA. */
+    if (!Number.isFinite(e.publishedAfter) || e.publishedAfter <= 0) {
+      throw new Error(`benefit-examples.csv: the row ${JSON.stringify(e.key)} has an unusable monthly_after_published.`);
+    }
+    const inc = e.publishedAfter - e.monthlyBase;
+    return {
+      key: e.key,
+      label: e.label,
+      source: e.source,
+      monthlyBefore: e.monthlyBase,
+      monthlyAfter: e.publishedAfter,
+      increase: inc,
+      increaseYear: inc * 12,
+      partB: p.priorPartB,
+      netIncrease: inc,
+      published: true,
+    };
+  }
   return {
     key: e.key,
     label: e.label,

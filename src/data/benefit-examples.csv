@@ -18,9 +18,12 @@
 #   SSA-published statistic, and its Part B is two standard premiums.
 # partb_base is the 2026 Part B premium withheld from that check (see
 # medicare-figures.csv); SSI is not reduced by Part B, so its rows carry 0.
-key,label,monthly_base,partb_base,source
-average,Average retirement benefit,2095,202.90,SSA 2027 COLA fact sheet (all retired workers before the 3.6% COLA)
-max_fra,Maximum benefit at full retirement age,4152,202.90,SSA 2026 COLA fact sheet (worker retiring at full retirement age)
-ssi_individual,SSI (individual),994,0,SSA 2026 COLA fact sheet (SSI federal payment standard)
-ssi_couple,SSI (eligible couple),1491,0,SSA 2026 COLA fact sheet (SSI federal payment standard)
-couple,Retired couple (two average benefits),4190,405.80,Derived: 2 x SSA average retirement benefit before the 3.6% COLA
+# monthly_after_published (optional): when SSA publishes the next year's figure itself (the maximum for a worker
+# retiring at full retirement age is set for each year's new retirees and is NOT the prior figure plus the COLA),
+# put it here and the build shows it instead of monthly_base x COLA.
+key,label,monthly_base,partb_base,source,monthly_after_published
+average,Average retirement benefit,2095,202.90,SSA 2027 COLA fact sheet (all retired workers before the 3.6% COLA),
+max_fra,Maximum benefit for a worker retiring at full retirement age (SSA's figure for each year),4152,202.90,SSA 2027 COLA fact sheet (Maximum Social Security Benefit: Worker Retiring at Full Retirement Age; 2026 and 2027 columns; read 2026-11-26),4188
+ssi_individual,SSI (individual),994,0,SSA 2026 COLA fact sheet (SSI federal payment standard),
+ssi_couple,SSI (eligible couple),1491,0,SSA 2026 COLA fact sheet (SSI federal payment standard),
+couple,Retired couple (two average benefits),4190,405.80,Derived: 2 x SSA average retirement benefit before the 3.6% COLA,
