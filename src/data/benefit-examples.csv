@@ -10,15 +10,17 @@
 #   fact sheet (ssa.gov/news — the "Cost-of-Living Adjustment (COLA)
 #   Information" sheet for the benefit year now being paid). The 2026 rows were
 #   verified against the SSA 2026 COLA fact sheet table: average retirement
-#   benefit $2,071; maximum at full retirement age $4,152; SSI federal payment
+#   benefit $2,095 (2027 sheet, "All Retired Workers" before the 3.6% COLA,
+#   read 2026-11-26; it was $2,071 on the 2026 sheet); maximum at full
+#   retirement age $4,152; SSI federal payment
 #   standards $994 (individual) / $1,491 (eligible couple).
-#   "couple" is derived — two average retirement benefits (2 x $2,071) — not an
+#   "couple" is derived — two average retirement benefits (2 x $2,095) — not an
 #   SSA-published statistic, and its Part B is two standard premiums.
 # partb_base is the 2026 Part B premium withheld from that check (see
 # medicare-figures.csv); SSI is not reduced by Part B, so its rows carry 0.
 key,label,monthly_base,partb_base,source
-average,Average retirement benefit,2071,202.90,SSA 2026 COLA fact sheet (average retirement benefit)
+average,Average retirement benefit,2095,202.90,SSA 2027 COLA fact sheet (all retired workers before the 3.6% COLA)
 max_fra,Maximum benefit at full retirement age,4152,202.90,SSA 2026 COLA fact sheet (worker retiring at full retirement age)
 ssi_individual,SSI (individual),994,0,SSA 2026 COLA fact sheet (SSI federal payment standard)
 ssi_couple,SSI (eligible couple),1491,0,SSA 2026 COLA fact sheet (SSI federal payment standard)
-couple,Retired couple (two average benefits),4142,405.80,Derived: 2 x SSA 2026 average retirement benefit
+couple,Retired couple (two average benefits),4190,405.80,Derived: 2 x SSA average retirement benefit before the 3.6% COLA
