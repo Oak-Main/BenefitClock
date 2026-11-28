@@ -107,7 +107,7 @@ ready(async () => {
     if (els.retry) els.retry.hidden = true;
   }
 
-  let meta = { currentIndex: null, nextIndex: null, crosswalk: null, currentYear: 2026, nextYear: 2027, sample: true };
+  let meta = { currentIndex: null, nextIndex: null, crosswalk: null, currentYear: 2026, nextYear: 2027, sample: true, aep: null };
 
   /* ---- Sample-data disclosure ----------------------------------------
      The page ships the disclosure only when the build decided the dataset is
@@ -143,13 +143,18 @@ ready(async () => {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), LOAD_TIMEOUT_MS);
     try {
-      const [manifest, plansCur, plansNext, xwalk] = await Promise.all([
+      const [manifest, plansCur, plansNext, xwalk, aep] = await Promise.all([
         loadJSON(`${DATA_BASE}/manifest.json`, ctrl.signal).catch(() => null),
         loadJSON(`${DATA_BASE}/plans-current.json`, ctrl.signal),
         loadJSON(`${DATA_BASE}/plans-next.json`, ctrl.signal),
         loadJSON(`${DATA_BASE}/crosswalk.json`, ctrl.signal),
+        /* Enrolment-season dates for the terminating-plan message. Optional:
+           without them the message falls back to the undated wording rather
+           than the tool failing to load. */
+        loadJSON(`${DATA_BASE}/aep.json`, ctrl.signal).catch(() => null),
       ]);
       clearTimeout(timer);
+      meta.aep = aep;
       if (manifest) {
         meta.currentYear = manifest.currentYear || meta.currentYear;
         meta.nextYear = manifest.nextYear || meta.nextYear;
@@ -331,6 +336,26 @@ ready(async () => {
      stays neutral rather than being coloured by accident. */
   const TONE_CLASS = { good: "cell-change--down", bad: "cell-change--up", warn: "cell-change--warn", flat: "cell-change--flat" };
 
+  /* The row shown when a plan has no next-year successor. The nonrenewal
+     Special Enrollment Period (CMS enrollment guidance §30.6.10.A; Medicare.gov
+     "contract with Medicare isn't renewed") is named ONLY for the crosswalk's
+     Terminated/Non-renewed Contract status — a plan that is merely missing
+     from this county's next-year file is not a nonrenewal. Wording mirrors the
+     approved copy on /medicare-plan-changes; the dates come from aep.json,
+     never typed here. Every interpolated value is escaped. */
+  const SEP_URL = "https://www.medicare.gov/basics/get-started-with-medicare/get-more-coverage/joining-a-plan/special-enrollment-periods";
+  function noSuccessorMessage(diff) {
+    const year = escapeHtml(meta.nextYear);
+    const aep = meta.aep || {};
+    if (diff.status === "termination" && aep.windowEndLabel && aep.nonrenewalSepStartLabel) {
+      return `This plan is not offered in ${year}. You can choose a new plan during Open Enrollment, which ends ${escapeHtml(aep.windowEndLabel)}. ` +
+        `Because the plan isn't renewing, Medicare also gives you a Special Enrollment Period from ${escapeHtml(aep.nonrenewalSepStartLabel)} through the last day in February to switch to another plan. ` +
+        `You'll be enrolled in Original Medicare if you don't join another Medicare Advantage Plan before your current plan ends. ` +
+        `See Medicare's official <a href="${SEP_URL}" rel="nofollow noopener" target="_blank">Special Enrollment Periods</a> page.`;
+    }
+    return `This plan is not offered in ${year}. Use Medicare Plan Finder or your county's plan list to choose a replacement during Open Enrollment.`;
+  }
+
   function renderDiff(diff) {
     if (els.empty) els.empty.hidden = true;
     if (els.results) els.results.hidden = false;
@@ -358,7 +383,7 @@ ready(async () => {
       if (diff.ambiguous) {
         els.tbody.innerHTML = `<tr><td colspan="4">We are not showing a comparison for this plan. See the note above.</td></tr>`;
       } else if (!diff.next) {
-        els.tbody.innerHTML = `<tr><td colspan="4">This plan is not offered in ${meta.nextYear}. Use Medicare Plan Finder or your county's plan list to choose a replacement during Open Enrollment.</td></tr>`;
+        els.tbody.innerHTML = `<tr><td colspan="4">${noSuccessorMessage(diff)}</td></tr>`;
       } else {
         els.tbody.innerHTML = diff.metrics
           .map((m) => {
