@@ -205,3 +205,16 @@ test("no page states an enrolment date except through the data layer", () => {
     `enrolment date written into markup — bind the {{AEP_*}} token instead: ${offenders.join(" | ")}`
   );
 });
+
+/* The nonrenewal Special Enrollment Period (CMS enrollment guidance §30.6.10.A)
+   is quoted on /key-dates and the AEP checklist through {{AEP_NONRENEWAL_SEP_START}}. */
+test("nonrenewal SEP start comes from aep.csv and must follow the AEP in December", () => {
+  const H = "season_year,coverage_year,window_start,window_end,ma_oep_start,ma_oep_end,nonrenewal_sep_start,status,source_updated,source";
+  const r = (sep) => `2026,2027,2026-10-15,2026-12-07,2027-01-01,2027-03-31,${sep},current,2026-10-15,CMS`;
+  const d = deriveAep(toRows([H, r("2026-12-08")].join("\n")));
+  assert.equal(d.nonrenewalSepStart, "2026-12-08");
+  assert.equal(d.nonrenewalSepStartLabel, "December 8");
+  assert.throws(() => deriveAep(toRows([H, r("2026-12-07")].join("\n"))), /nonrenewal_sep_start/);
+  assert.throws(() => deriveAep(toRows([H, r("2027-01-08")].join("\n"))), /nonrenewal_sep_start/);
+  assert.equal(derive(row()).nonrenewalSepStartLabel, null);
+});
