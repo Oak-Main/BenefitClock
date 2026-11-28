@@ -342,6 +342,7 @@ function build() {
     AEP_COVERAGE_START: requireFigure(aep.coverageStartLabel, "AEP_COVERAGE_START", "The current row in src/data/aep.csv needs an ma_oep_start."),
     AEP_COVERAGE_START_LONG: requireFigure(aep.coverageStartLong, "AEP_COVERAGE_START_LONG", "The current row in src/data/aep.csv needs an ma_oep_start."),
     AEP_MA_OEP_RANGE_LONG: requireFigure(aep.maOepRangeLong, "AEP_MA_OEP_RANGE_LONG", "The current row in src/data/aep.csv needs ma_oep_start and ma_oep_end."),
+    AEP_NONRENEWAL_SEP_START: requireFigure(aep.nonrenewalSepStartLabel, "AEP_NONRENEWAL_SEP_START", "The current row in src/data/aep.csv needs a nonrenewal_sep_start."),
 
     /* Open-enrollment hub (src/pages/open-enrollment.html). The hub's date-band
        cards split month from day, and its week-by-week checklist headers quote

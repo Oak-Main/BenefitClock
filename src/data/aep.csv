@@ -14,7 +14,13 @@
 # Refresh each autumn: add the next season's row and move `status=current` onto
 # it. Exactly one row must be `current` — the build fails otherwise rather than
 # guessing, so the site can never quietly advertise a season that has passed.
-season_year,coverage_year,window_start,window_end,ma_oep_start,ma_oep_end,status,source_updated,source
-2024,2025,2024-10-15,2024-12-07,2025-01-01,2025-03-31,past,2024-10-15,CMS Medicare & You / 42 CFR 422.62
-2025,2026,2025-10-15,2025-12-07,2026-01-01,2026-03-31,past,2025-10-15,CMS Medicare & You / 42 CFR 422.62
-2026,2027,2026-10-15,2026-12-07,2027-01-01,2027-03-31,current,2026-10-15,CMS Medicare & You / 42 CFR 422.62
+#
+# nonrenewal_sep_start: first day of the Special Enrollment Period for people
+# whose MA or Part D plan/contract is non-renewed effective January 1 (it runs
+# through the last day of the following February). Source: CMS Medicare
+# Advantage and Part D Enrollment and Disenrollment Guidance, CY 2027,
+# section 30.6.10.A (42 CFR 422.62(b)(1), 423.38(c)(6)).
+season_year,coverage_year,window_start,window_end,ma_oep_start,ma_oep_end,nonrenewal_sep_start,status,source_updated,source
+2024,2025,2024-10-15,2024-12-07,2025-01-01,2025-03-31,2024-12-08,past,2024-10-15,CMS Medicare & You / 42 CFR 422.62
+2025,2026,2025-10-15,2025-12-07,2026-01-01,2026-03-31,2025-12-08,past,2025-10-15,CMS Medicare & You / 42 CFR 422.62
+2026,2027,2026-10-15,2026-12-07,2027-01-01,2027-03-31,2026-12-08,current,2026-10-15,CMS Medicare & You / 42 CFR 422.62

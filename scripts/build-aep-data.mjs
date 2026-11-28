@@ -71,6 +71,7 @@ export function toRows(text) {
       windowEnd: r.window_end,
       maOepStart: r.ma_oep_start,
       maOepEnd: r.ma_oep_end,
+      nonrenewalSepStart: r.nonrenewal_sep_start || null,
       status: r.status || "past",
       sourceUpdated: r.source_updated || null,
       source: r.source || "",
@@ -121,6 +122,19 @@ export function deriveAep(rows) {
   if (end.iso <= start.iso) throw new Error("aep.csv: window_end must come after window_start");
   if (oepEnd.iso <= coverage.iso) throw new Error("aep.csv: ma_oep_end must come after ma_oep_start");
 
+  /* Nonrenewal SEP (CMS enrollment guidance §30.6.10.A): begins in December of
+     the contract year, after the AEP closes. Optional here so older rows parse;
+     build.mjs refuses to render the copy that needs it when it is missing. */
+  let sepStart = null;
+  if (current.nonrenewalSepStart) {
+    sepStart = parseIso(current.nonrenewalSepStart, "nonrenewal_sep_start");
+    if (sepStart.year !== current.seasonYear || sepStart.month !== 12 || sepStart.iso <= end.iso) {
+      throw new Error(
+        `aep.csv: nonrenewal_sep_start must be in December ${current.seasonYear}, after window_end`
+      );
+    }
+  }
+
   return {
     generatedFrom: "src/data/aep.csv",
     seasonYear: current.seasonYear,
@@ -138,6 +152,8 @@ export function deriveAep(rows) {
     coverageStartLabel: monthDay(coverage),
     coverageStartLong: longDate(coverage),
     maOepRangeLong: `${monthDay(coverage)} – ${longDate(oepEnd)}`,
+    nonrenewalSepStart: sepStart ? sepStart.iso : null,
+    nonrenewalSepStartLabel: sepStart ? monthDay(sepStart) : null,
     sourceUpdated: current.sourceUpdated,
     source: current.source,
     seasons: rows,
