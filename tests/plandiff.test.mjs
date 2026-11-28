@@ -290,8 +290,23 @@ test("termination note types no dates when aep.json is unavailable", () => {
   assert.doesNotMatch(note, /(January|February|March|April|May|June|July|August|September|October|November|December) \d/);
 });
 
-test("the nonrenewal SEP is named only for a termination", () => {
-  for (const s of ["renewal", "consolidation", "service-area-reduction", "new", "unknown"]) {
+test("the nonrenewal SEP is named only for a termination or a dropped county", () => {
+  assert.match(statusInfo("service-area-reduction").note, /If your county is being dropped.*Special Enrollment Period/);
+  for (const s of ["renewal", "consolidation", "new", "unknown"]) {
     assert.doesNotMatch(statusInfo(s, { nextYear: 2027 }).note, /Special Enrollment Period/);
   }
+});
+
+/* CMS reassigns Extra Help (LIS) enrollees in terminating plans (CY 2027
+   enrollment guidance §40.1.9), so a blanket "you'll lose drug coverage" is
+   wrong for some readers. Removed in #37, crept back in #40; keep it out. */
+test("no page or runtime copy says a nonrenewal means losing drug coverage", async () => {
+  const { readdirSync, readFileSync } = await import("node:fs");
+  const files = [
+    ...readdirSync("src/pages").filter((f) => f.endsWith(".html")).map((f) => `src/pages/${f}`),
+    "src/assets/js/plan-diff.js",
+  ];
+  const bad = /lose (your )?drug coverage|no drug coverage unless/i;
+  for (const f of files) assert.doesNotMatch(readFileSync(f, "utf8"), bad, f);
+  for (const s of ["termination", "service-area-reduction"]) assert.doesNotMatch(statusInfo(s).note, bad);
 });

@@ -345,7 +345,7 @@ export function statusInfo(status, opts) {
     case "consolidation":
       return { label: "Consolidated into another plan", tone: "warn", note: "CMS is merging your plan into the successor plan shown. Your benefits map to the new plan ID." };
     case "service-area-reduction":
-      return { label: "Service-area reduction", tone: "warn", note: "This plan is shrinking its service area. Confirm it is still offered in your county." };
+      return { label: "Service-area reduction", tone: "warn", note: "This plan is shrinking its service area. Confirm it is still offered in your county. If your county is being dropped, Medicare treats that as a nonrenewal for you, so a Special Enrollment Period applies." };
     case "termination":
       return { label: `Terminating — not offered ${yr.inNext}`, tone: "bad", note: terminationNote(yr, opts) };
     case "new":
