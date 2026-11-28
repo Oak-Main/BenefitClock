@@ -321,6 +321,7 @@ ready(async () => {
       contractId, planId, state, county,
       currentYear: meta.currentYear,
       nextYear: meta.nextYear,
+      aep: meta.aep,
     });
 
     if (!diff.ok) {
