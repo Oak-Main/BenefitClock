@@ -350,7 +350,7 @@ ready(async () => {
     if (diff.status === "termination" && aep.windowEndLabel && aep.nonrenewalSepStartLabel) {
       return `This plan is not offered in ${year}. You can choose a new plan during Open Enrollment, which ends ${escapeHtml(aep.windowEndLabel)}. ` +
         `Because the plan isn't renewing, Medicare also gives you a Special Enrollment Period from ${escapeHtml(aep.nonrenewalSepStartLabel)} through the last day in February to switch to another plan. ` +
-        `You'll be enrolled in Original Medicare if you don't join another Medicare Advantage Plan before your current plan ends. ` +
+        `If you don't pick a new plan before your current one ends, Medicare Advantage members return to Original Medicare, and you'll have no drug coverage unless you also join a Part D plan. If you have a stand-alone Part D plan, you'll lose drug coverage. ` +
         `See Medicare's official <a href="${SEP_URL}" rel="nofollow noopener" target="_blank">Special Enrollment Periods</a> page.`;
     }
     return `This plan is not offered in ${year}. Use Medicare Plan Finder or your county's plan list to choose a replacement during Open Enrollment.`;
