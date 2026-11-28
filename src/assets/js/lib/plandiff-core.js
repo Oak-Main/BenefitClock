@@ -313,9 +313,29 @@ export function diffMetric(metric, prior, next, opts) {
 }
 
 /**
+ * The status note for a Terminated/Non-renewed Contract. Names the nonrenewal
+ * Special Enrollment Period (CMS enrollment guidance §30.6.10.A; Medicare.gov
+ * "contract with Medicare isn't renewed"). Dates come only from aep.json
+ * (`windowRange`, `nonrenewalSepStartLabel`); without them the note gives no
+ * dates rather than typing ones that go stale. Deliberately says nothing
+ * about drug coverage: CMS reassigns Extra Help enrollees (§40.1.9), so a
+ * blanket "you lose drug coverage" would be wrong for some readers.
+ */
+function terminationNote(yr, opts) {
+  const aep = (opts && opts.aep) || {};
+  const dated = aep.windowRange && aep.nonrenewalSepStartLabel;
+  const oe = dated ? `Open Enrollment, ${aep.windowRange}` : "Open Enrollment, the yearly sign-up window";
+  const sep = dated
+    ? `a Special Enrollment Period from ${aep.nonrenewalSepStartLabel} through the last day in February`
+    : "a Special Enrollment Period";
+  return `This plan will not be offered ${yr.inNext}. You can choose a new plan during ${oe}. ` +
+    `Because the plan isn't renewing, Medicare also gives you ${sep} to switch to another plan.`;
+}
+
+/**
  * Human-readable label + tone for a crosswalk status code.
  * @param {string} status
- * @param {object} opts  { nextYear } from the data manifest.
+ * @param {object} opts  { nextYear } from the data manifest; { aep } from aep.json.
  */
 export function statusInfo(status, opts) {
   const yr = yearWords(opts);
@@ -327,7 +347,7 @@ export function statusInfo(status, opts) {
     case "service-area-reduction":
       return { label: "Service-area reduction", tone: "warn", note: "This plan is shrinking its service area. Confirm it is still offered in your county." };
     case "termination":
-      return { label: `Terminating — not offered ${yr.inNext}`, tone: "bad", note: `This plan will not be offered ${yr.inNext}. You need to pick a new plan during Open Enrollment. That is the yearly sign-up window, October 15 to December 7. If you do nothing, you may be moved to Original Medicare.` };
+      return { label: `Terminating — not offered ${yr.inNext}`, tone: "bad", note: terminationNote(yr, opts) };
     case "new":
       return { label: `New plan ${yr.forNext}`, tone: "info", note: `This is a newly offered plan ${yr.forNext}.` };
     default:
@@ -357,12 +377,13 @@ export function planTypeLabel(plan) {
  * @param {string} args.county
  * @param {string} args.state
  * @param {number} [args.nextYear]     upcoming plan year, from the manifest
+ * @param {object} [args.aep]          aep.json, for dates in the status note
  * @returns {object} { ok, reason?, prior, next, status, statusInfo, metrics, headline }
  */
 export function buildDiff(args) {
   const { currentIndex, nextIndex, crosswalk, contractId, planId, county, state } = args;
   const yr = yearWords(args);
-  const yearOpts = { nextYear: args.nextYear };
+  const yearOpts = { nextYear: args.nextYear, aep: args.aep };
 
   const priorKey = planKey(contractId, planId, county);
   const prior =

@@ -197,7 +197,6 @@ test("runtime copy spells out AEP and MAPD", () => {
   const note = statusInfo("termination", { nextYear: 2027 }).note;
   assert.doesNotMatch(note, /\bAEP\b/);
   assert.match(note, /Open Enrollment/);
-  assert.match(note, /October 15/);
   const label = planTypeLabel({ planType: "MAPD", network: "PPO" });
   assert.doesNotMatch(label, /MAPD/);
   assert.match(label, /Medicare Advantage/);
@@ -267,4 +266,32 @@ test("zero is a real value, not treated as missing", () => {
   assert.equal(d2.direction, "down");
   assert.equal(d2.tone, "good");
   assert.equal(d2.nextText, "$0");
+});
+
+/* ---- terminating-plan note: nonrenewal SEP, dates from aep.json -------- */
+
+test("termination note names the nonrenewal SEP with dates from aep.json", () => {
+  const aep = { windowRange: "October 16 – December 9", nonrenewalSepStartLabel: "December 10" };
+  const note = statusInfo("termination", { nextYear: 2031, aep }).note;
+  assert.match(note, /Open Enrollment, October 16 – December 9/);
+  assert.match(note, /Special Enrollment Period from December 10 through the last day in February/);
+  assert.doesNotMatch(note, /October 15|December 7|December 8/);
+  assert.doesNotMatch(note, /drug coverage/i);
+
+  const cur = indexPlans([plan()]);
+  const xw = indexCrosswalk([{ fromContractId: "H1234", fromPlanId: "001", toContractId: null, toPlanId: null, status: "termination" }]);
+  const d = buildDiff({ currentIndex: cur, nextIndex: indexPlans([]), crosswalk: xw, contractId: "H1234", planId: "001", state: "FL", county: "Broward", nextYear: 2031, aep });
+  assert.equal(d.statusInfo.note, note);
+});
+
+test("termination note types no dates when aep.json is unavailable", () => {
+  const note = statusInfo("termination", { nextYear: 2027 }).note;
+  assert.match(note, /Special Enrollment Period/);
+  assert.doesNotMatch(note, /(January|February|March|April|May|June|July|August|September|October|November|December) \d/);
+});
+
+test("the nonrenewal SEP is named only for a termination", () => {
+  for (const s of ["renewal", "consolidation", "service-area-reduction", "new", "unknown"]) {
+    assert.doesNotMatch(statusInfo(s, { nextYear: 2027 }).note, /Special Enrollment Period/);
+  }
 });
